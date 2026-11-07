@@ -6,7 +6,7 @@ param(
   [string]$Proxy = 'http://127.0.0.1:7897',
   [switch]$SkipPush
 )
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 'Continue'  # 原生命令 stderr 在 PS5.1 会被当 error record；改用显式 exit code 判断
 $Root = Split-Path -Parent $PSScriptRoot
 Set-Location $Root
 $git = 'C:\Users\samcz\AppData\Local\Programs\Git\cmd\git.exe'
