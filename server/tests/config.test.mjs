@@ -17,7 +17,7 @@ test('默认配置：PORT=8790、HOST=127.0.0.1、DATA_DIR=server/data、PUBLIC_
   assert.deepEqual(config.readLimit, { max: 120, windowMs: 60 * 1000 });
   assert.equal(config.maxBodyBytes, 4 * 1024 * 1024);
   assert.equal(config.maxImageBytes, Math.floor(2.5 * 1024 * 1024));
-  assert.equal(config.maxInkValue, 100000);
+  assert.equal(config.maxInkValue, 600000);
 });
 
 test('环境变量：PORT / HOST / DATA_DIR / PUBLIC_DIR / TRUST_PROXY / --no-static', () => {

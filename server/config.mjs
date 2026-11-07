@@ -25,7 +25,7 @@ export const DEFAULTS = Object.freeze({
   rateLimitEnabled: true,
   maxBodyBytes: 4 * MB, // POST 请求体上限
   maxImageBytes: Math.floor(2.5 * MB), // 图片解码后上限
-  maxInkValue: 100000, // ink 三字段上限
+  maxInkValue: 600000, // ink 三字段上限（10 分钟；含 ms，能容纳 5–8 分钟动线的 30–48 万毫秒）
   defaultListLimit: 24,
   maxListLimit: 60,
   saveLimit: Object.freeze({ max: 6, windowMs: 10 * 60 * 1000 }), // 保存：6 次 / 10 分钟 / IP

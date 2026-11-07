@@ -68,7 +68,7 @@ function makeCard(item) {
   const name = sceneLabel(item.sceneId);
   const local = item.source === 'local';
   const tags = [];
-  if (name) tags.push(el('span', { class: 'tag', text: name }));
+  // 标题已经是场景名，tag 只保留心境与来源，避免「早春 / 早春」重复
   if (item.mood) {
     const label = moodLabel(item.mood);
     if (label) tags.push(el('span', { class: 'tag', text: label }));

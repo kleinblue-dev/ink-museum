@@ -1046,28 +1046,25 @@ export function createJourney(options) {
     frame.appendChild(skeleton);
     node.appendChild(frame);
 
-    const plan = dotPlan(session.pre, session.post);
+    const dots = el('div', { class: 'dots', 'aria-hidden': 'true' });
+    const scaleKeysInOrder = CONTENT.pre && CONTENT.pre.items ? CONTENT.pre.items.map((item) => item.key) : [];
+    for (let i = 0; i < scaleKeysInOrder.length; i += 1) {
+      const key = scaleKeysInOrder[i];
+      const before = normalizeScale(session.pre && session.pre[key]);
+      const after = normalizeScale(session.post && session.post[key]);
+      if (before === null || after === null) continue;
+      const dotSize = (value) => 8 + Math.round(((value - 1) / 6) * 4) + 'px';
+      const pair = el('span', { class: 'dot-pair' });
+      const ghost = el('span', { class: 'dot dot--ghost' });
+      ghost.style.setProperty('--dot-size', dotSize(before));
+      const inkDot = el('span', { class: 'dot dot--ink' });
+      inkDot.style.setProperty('--dot-size', dotSize(after));
+      pair.appendChild(ghost);
+      pair.appendChild(inkDot);
+      dots.appendChild(pair);
+    }
     const changeBox = el('div', { class: 'change' });
     if (scroll.changeLabel) changeBox.appendChild(el('p', { class: 'change-label', text: scroll.changeLabel }));
-    const dots = el('div', { class: 'dots', 'aria-hidden': 'true' });
-    for (let i = 0; i < plan.length; i += 1) {
-      const entry = plan[i];
-      const dot = el('span', { class: 'dot' });
-      const strength = Math.min(1, Math.abs(entry.delta) / 3);
-      if (entry.tone === 'better') {
-        const size = 9 + Math.round(strength * 7);
-        dot.style.width = size + 'px';
-        dot.style.height = size + 'px';
-        dot.style.opacity = String(0.55 + strength * 0.45);
-      } else if (entry.tone === 'worse') {
-        dot.style.background = 'transparent';
-        dot.style.boxShadow = 'inset 0 0 0 1px var(--seal-dim)';
-        dot.style.opacity = '0.85';
-      } else {
-        dot.style.opacity = '0.32';
-      }
-      dots.appendChild(dot);
-    }
     changeBox.appendChild(dots);
     node.appendChild(changeBox);
 

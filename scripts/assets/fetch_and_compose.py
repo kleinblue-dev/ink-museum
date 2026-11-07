@@ -115,13 +115,13 @@ ARTWORKS = [
         },
         "sources": [
             {"cache": "bamboo_wentong.jpg", "commons": "Wen Tong Babmbuk.jpg",
-             "width": 1600, "expect": (1600, 2517)},
+             "width": None, "expect": (1830, 2880)},
         ],
-        "wide": {"cache": "bamboo_wentong.jpg", "box": (0.0, 0.247000, 1.0, 0.604700),
-                 "note": "裁去上部题跋，取竹枝交叠横段"},
-        "tall": {"cache": "bamboo_wentong.jpg", "box": (0.187500, 0.210000, 0.750000, 0.782100),
-                 "note": "竖裁竹枝主段，避开左下与右下藏印"},
-        "tone": {"white_pct": 99.0, "black_pct": 0.3, "contrast": 1.10, "sharpen": 0.45},
+        "wide": {"cache": "bamboo_wentong.jpg", "box": (0.0, 0.205, 1.0, 0.5623),
+                 "note": "裁去上部题跋，取竹枝横段；右上留白压字", "finish_blur": 0.5},
+        "tall": {"cache": "bamboo_wentong.jpg", "box": (0.10, 0.222, 0.8500, 0.985),
+                 "note": "竖裁竹枝主体，避开左右缘与下部藏印", "finish_blur": 0.5},
+        "tone": {"white_pct": 78.0, "black_pct": 0.3, "contrast": 1.10, "sharpen": 0.45},
     },
     {
         "id": "pavilion",
@@ -131,13 +131,14 @@ ARTWORKS = [
             "museum": "台北故宫博物院",
         },
         "sources": [
-            {"cache": "pavilion.jpg", "commons": "Ni Zan. The Rongxi Studio.1372. 74,7x35,3. National Palace Museum, Taipei.jpg",
-             "width": 1600, "expect": (1600, 3287)},
+            {"cache": "pavilion.jpg",
+             "commons": "Ni Zan. The Rongxi Studio.1372. 74,7x35,3. National Palace Museum, Taipei.jpg",
+             "width": None, "expect": (1788, 3674)},
         ],
-        "wide": {"cache": "pavilion.jpg", "box": (0.040000, 0.380000, 0.960000, 0.631900),
-                 "note": "裁去上部倪瓒自题与藏印，取疏林、空亭、远山横段"},
-        "tall": {"cache": "pavilion.jpg", "box": (0.075000, 0.270000, 0.650000, 0.736000),
-                 "note": "竖裁空亭与疏林，避开四周藏印"},
+        "wide": {"cache": "pavilion.jpg", "box": (0.04, 0.515, 0.96, 0.7668),
+                 "note": "裁去上部自题藏印，取疏林、空亭、水面；右侧留白", "finish_blur": 0.5},
+        "tall": {"cache": "pavilion.jpg", "box": (0.15, 0.44, 0.7249, 0.8877),
+                 "note": "竖裁疏林与空亭，亭在右下，上部留白", "finish_blur": 0.5},
         "tone": {"white_pct": 98.0, "black_pct": 0.2, "contrast": 1.16, "sharpen": 0.55},
     },
 ]
@@ -409,8 +410,8 @@ def paper_base(w, h, seed, grain=0.022, mottle=0.035):
     return np.clip(rgb, 0, 1)
 
 
-def draw_fibers(img, seed, count):
-    """在图上画极淡的纸纤维线（短、弯、低对比）。"""
+def draw_fibers(img, seed, count, wrap=False, strength=0.28):
+    """在图上画极淡的纸纤维线（短、弯、低对比）。wrap=True 时四周环绕绘制，保证可平铺。"""
     rng = np.random.RandomState(seed)
     w, h = img.size
     layer = Image.new("L", (w, h), 0)
@@ -418,20 +419,24 @@ def draw_fibers(img, seed, count):
     for _ in range(count):
         x = rng.uniform(0, w)
         y = rng.uniform(0, h)
-        ln = rng.uniform(8, 90)
+        ln = rng.uniform(10, 110)
         ang = rng.uniform(0, np.pi)
-        curl = rng.uniform(-0.35, 0.35)
-        pts = []
+        curl = rng.uniform(-0.4, 0.4)
+        base = []
         for k in range(6):
             t = k / 5.0
             a = ang + curl * t
-            pts.append((x + np.cos(a) * ln * t, y + np.sin(a) * ln * t))
-        val = int(rng.uniform(10, 26))
-        d.line(pts, fill=val, width=1)
-    layer = layer.filter(ImageFilter.GaussianBlur(0.6))
+            base.append((x + np.cos(a) * ln * t, y + np.sin(a) * ln * t))
+        val = int(rng.uniform(8, 22))
+        offsets = [(0, 0)]
+        if wrap:
+            offsets = [(dx, dy) for dx in (-w, 0, w) for dy in (-h, 0, h)]
+        for dx, dy in offsets:
+            d.line([(px + dx, py + dy) for px, py in base], fill=val, width=1)
+    layer = layer.filter(ImageFilter.GaussianBlur(1.1))
     arr = np.asarray(img, dtype=np.float32) / 255.0
     a = np.asarray(layer, dtype=np.float32) / 255.0
-    arr = arr * (1.0 - a[..., None] * 0.55) + a[..., None] * 0.0
+    arr = arr * (1.0 - a[..., None] * strength)
     return Image.fromarray((np.clip(arr, 0, 1) * 255 + 0.5).astype(np.uint8))
 
 
@@ -452,7 +457,7 @@ def build_scroll():
         w, h = size
         arr = paper_base(w, h, seed=20260)
         img = Image.fromarray((arr * 255 + 0.5).astype(np.uint8))
-        img = draw_fibers(img, seed=717, count=int(w * h / 2600))
+        img = draw_fibers(img, seed=717, count=int(w * h / 1800), strength=0.60)
         img = add_vignette(img, strength=0.07)
         path = os.path.join(BG, name)
         q, n = save_webp_budget(img, path, BUDGET["scroll"])
@@ -465,7 +470,7 @@ def build_tile():
     size = 512
     arr = paper_base(size, size, seed=90210, grain=0.030, mottle=0.045)
     img = Image.fromarray((arr * 255 + 0.5).astype(np.uint8))
-    img = draw_fibers(img, seed=4242, count=260)
+    img = draw_fibers(img, seed=4242, count=380, wrap=True, strength=0.60)
     path = os.path.join(ASSETS, "paper-tile.webp")
     q, n = save_webp_budget(img, path, BUDGET["tile"])
     return ("paper-tile.webp", img.size, q, n)
@@ -509,10 +514,10 @@ def build_icons():
     # 磨损：边缘随机缺口
     wear = Image.new("L", (S, S), 0)
     wd = ImageDraw.Draw(wear)
-    for _ in range(220):
+    for _ in range(110):
         side = rng.randint(0, 4)
         t = rng.uniform(0.02, 0.98)
-        r = rng.uniform(6, 26)
+        r = rng.uniform(4, 16)
         if side == 0:
             cx, cy = pad + t * seal_size, pad + rng.uniform(-1, 1) * 6
         elif side == 1:
@@ -522,7 +527,7 @@ def build_icons():
         else:
             cx, cy = pad + seal_size + rng.uniform(-1, 1) * 6, pad + t * seal_size
         wd.ellipse([cx - r, cy - r, cx + r, cy + r], fill=255)
-    wear = wear.filter(ImageFilter.GaussianBlur(1.2))
+    wear = wear.filter(ImageFilter.GaussianBlur(2.0))
     mask = Image.fromarray(np.clip(np.asarray(mask, np.float32) - np.asarray(wear, np.float32), 0, 255).astype(np.uint8))
     mask = mask.filter(ImageFilter.GaussianBlur(0.8))
 

@@ -203,7 +203,7 @@ Idempotency-Key: <调用方生成的唯一键>
 | `pre` | 对象，**只允许** `tight/tired/scattered`，三者必填，整数 1..7 | `invalid_pre` |
 | `post` | 对象，**只允许** `tight/tired/scattered/mood`，三量表必填 1..7，`mood` 可选 | `invalid_post` |
 | `mood` | ∈ `content.post.moods[].key`；也可只写在 `post.mood`（两处都写时必须一致） | `invalid_mood` / `missing_mood` / `mood_conflict` |
-| `ink` | `{strokes,stamps,ms}` 三者必填，非负整数且 ≤ `100000`；多余键忽略 | `invalid_ink` |
+| `ink` | `{strokes,stamps,ms}` 三者必填，非负整数且 ≤ `600000`（10 分钟，能容纳 5–8 分钟动线的 `ms`，约 30–48 万）；多余键忽略 | `invalid_ink` |
 | `image` | `data:image/(webp|png);base64,<base64>`；解码后 ≤ 2.5MB；magic 必须与声明类型一致 | `image_required` / `invalid_image` / `invalid_image_magic` / `image_too_large`(413) |
 | body | JSON 对象，≤ 4MB | `invalid_body` / `invalid_json` / `payload_too_large`(413) / `unsupported_media_type`(415) |
 | `Idempotency-Key` | 必填，1..200 字符 | `missing_idempotency_key` / `invalid_idempotency_key` |
@@ -308,7 +308,7 @@ Content-Type: application/json; charset=utf-8
 | 400 | `invalid_pre` | `pre` 非对象 / 缺键 / 值非 1..7 整数 / 未知键 |
 | 400 | `invalid_post` | `post` 同上（允许 `mood`） |
 | 400 | `invalid_mood` / `missing_mood` / `mood_conflict` | `mood` 不合法 / 缺失 / 两处不一致 |
-| 400 | `invalid_ink` | `ink.*` 非 0..100000 整数 |
+| 400 | `invalid_ink` | `ink.*` 非 0..600000 整数 |
 | 400 | `image_required` | 缺少 `image` |
 | 400 | `invalid_image` | 非 `data:image/(webp|png);base64,…` / base64 非法 |
 | 400 | `invalid_image_magic` | 字节 magic 与声明类型不符 |
@@ -461,7 +461,7 @@ museum.example.com {
 
 1. **图片扩展名跟随实际类型（已与 Lead 同步，SPEC §6 按 B 语义更新）**：WebP 上传 → 恒为 `/api/scrolls/:id/image.webp`（SPEC 正常路径）；PNG 上传 → `/image.png`。前端始终使用响应中的 `imageUrl`，不要写死扩展名；扩展名与类型不一致的 URL 返回 404。
 2. `thumbUrl` 暂等于 `imageUrl`：零依赖后端不做图片缩放，馆藏墙直接加载原图（≤2.5MB/张，本地自托管可接受；流量大时建议构建期生成缩略图或加图片处理服务）。
-3. `ink` 三字段（含 `ms`）上限 `100000`。`ms` 是毫秒：5–8 分钟的动线若墨迹步耗时超过 100 秒，会被 `400 invalid_ink`。**前端保存前建议 `ms = Math.min(ms, 100000)` 或改为对 `strokes/stamps/ms` 分设上限**（若要放宽，Lead 确认后改 `config.maxInkValue` 并同步 SPEC/测试）。这是任务书指定值，SPEC §6 未写死。
+3. `ink` 三字段（含 `ms`）上限 **600000**（10 分钟）：5–8 分钟动线的 `ms` 约 30–48 万，可正常保存；`strokes`/`stamps` 沿用同一上限（实际远达不到）。SPEC §6 未写死该数值，已由 Lead 确认为 600000；如需再调，改 `server/config.mjs` 的 `DEFAULTS.maxInkValue`。
 4. 列表 `total` 为**过滤后**总数；`cursor` 是基于 offset 的不透明游标（馆藏只增不删，顺序稳定）。
 5. 限流为**单进程内存**实现：重启清零、多实例不共享。
 6. 无 CORS、无鉴权、无删除/修改接口（有意为之：匿名、只增、馆藏由本机决定上传）。

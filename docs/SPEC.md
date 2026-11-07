@@ -186,7 +186,7 @@ engine.setInteractive(bool); engine.resize(); engine.destroy()
 - 存储：`server/data/scrolls.jsonl`（append + fsync）+ `server/data/images/<id>.webp`；启动重建内存索引；`schemaVersion`/`contentVersion` 落盘；原子写临时文件后 rename。
 - 限流：同 IP 6 次/10 分钟保存、120 次/分钟读；按 `x-forwarded-for` 仅当 `TRUST_PROXY=1`。
 - 安全：CSP 仅本站、`X-Content-Type-Options`、`Referrer-Policy`、`Cache-Control`；路径穿越防护；错误不泄漏栈。
-- 测试：`node --test server/tests/`，覆盖 content 校验/保存/幂等/gallery/限流/大小限制/静态托管，不得依赖外网。
+- 测试：`npm test`，覆盖 content 校验/保存/幂等/gallery/限流/大小限制/静态托管，不得依赖外网。
 
 ## 7. 视觉与资产（curator 产出，frontend 消费）
 
@@ -199,7 +199,7 @@ engine.setInteractive(bool); engine.resize(); engine.destroy()
 
 ## 8. 验收门（QA 必跑，Lead 终验）
 
-1. `node --test server/tests/` 全绿。
+1. `npm test` 全绿（后端 50 + 前台/引擎单测，Node 24 下不要用目录参数跑 node --test）。
 2. `node scripts/validate-content.mjs` 0 错误（schema、文件存在、字数纪律、违禁词）。
 3. 浏览器 E2E（Chrome headless via playwright-core；本地/QA 起服务用 `SAVE_LIMIT_MAX=200 READ_LIMIT_MAX=2000 node server/index.mjs`）：桌面 1440×900 / 手机 390×844 / 320 宽：完整走完 enter→reveal；无 console error/pageerror；无横向溢出；画布能落笔且撤销生效；本机模式保存画卷；服务端模式保存后出现在馆藏墙；`#about` 打开关闭；刷新恢复步骤。
 4. 运行时网络：除本站资源外 0 请求（拦截记录）。

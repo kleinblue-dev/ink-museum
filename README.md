@@ -48,10 +48,22 @@ node scripts/build-standalone.mjs
 ## 前后端怎么分工
 
 ```
-content/content.js ──┬── import ──> 前台 js/（浏览器）
+content/content.js ──┬── import ──> 前台 js/（浏览器，local-first）
                      └── import ──> 后端 server/（Node，同源 API）
-前台是 local-first：无 API 时自动降级本机 localStorage（GitHub Pages 就这样）；
-有 `/api/health` 时自动进 server 模式，收卷可 POST 进馆藏墙。
+
+ink-museum/
+├─ index.html            应用壳（唯一 HTML）
+├─ css/                  base / steps / overlays（设计 token 在 base.css :root）
+├─ js/                   main/state/journey/scenes/api/gallery/export/ui
+│  └─ ink/               engine.js（落墨引擎）+ demo.js（自测台脚本）
+├─ content/content.js    唯一内容源（文案/四个展厅/墨色/前后题）
+├─ data/masks.json       芥子园 11 块墨块掩膜（墨心提取）
+├─ assets/bg/            宋元名作 wide/tall/thumb WebP + 图标/纸纹
+├─ server/               零依赖 Node API + 存储 + 测试 + docs/API.md
+├─ scripts/              资产管线 / validate / encoding / standalone / static / deploy
+├─ tests/                单元测试（node --test）+ e2e（playwright-core）
+├─ docs/                 SPEC / API / REA_MUSEUM / QA_REPORT
+└─ dist/standalone.html  单文件离线版（构建产物，不进 git）
 ```
 - 前台：原生 ES module + CSS，无构建步骤、运行时零外链；`js/` 目录即全部逻辑。
 - 后端：零依赖 Node ≥22，`node server/index.mjs`；同一端口托管前台 + `/api/*`；存储 = `server/data/scrolls.jsonl` + WebP 图片文件。
@@ -60,11 +72,12 @@ content/content.js ──┬── import ──> 前台 js/（浏览器）
 ## 测试与验收
 
 ```powershell
-node scripts/validate-content.mjs        # 内容纪律 + 资产预算（缺资产会被拦）
-node --test server/tests/                # 后端单元/接口测试
-node --test tests/unit/                  # 前台纯逻辑测试 + 引擎单元测试
-node tests/e2e/run.mjs                   # 浏览器 E2E（需本机 Chrome）
+npm test                                 # 后端 51 + 前台/引擎 42 = 93 项
+node scripts/validate-content.mjs        # 内容纪律 + 资产尺寸/预算（缺图会被拦）
+node scripts/check-encoding.mjs          # 源文件编码/乱码扫描
+node tests/e2e/run.mjs                   # 浏览器 E2E（playwright-core + 本机 Chrome）
 node scripts/build-standalone.mjs        # 单文件离线版 + 残留引用检查
+node scripts/serve-static.mjs            # 纯静态预览（local 模式）
 ```
 
 验收门与 QA 报告见 [docs/SPEC.md](docs/SPEC.md) §8、[docs/QA_REPORT.md](docs/QA_REPORT.md)。

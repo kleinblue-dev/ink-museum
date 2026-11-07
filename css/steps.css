@@ -3,7 +3,6 @@
 /* ============ enter 入馆 ============ */
 
 .screen--enter {
-  position: relative;
   gap: clamp(18px, 4vh, 44px);
 }
 
@@ -15,27 +14,28 @@
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(38% 30% at 50% 46%, rgba(9, 7, 5, 0.62) 0%, rgba(9, 7, 5, 0.4) 46%, rgba(9, 7, 5, 0.12) 74%, rgba(9, 7, 5, 0) 88%);
+    radial-gradient(40% 32% at 50% 46%, rgba(9, 7, 5, 0.72) 0%, rgba(9, 7, 5, 0.48) 44%, rgba(9, 7, 5, 0.16) 72%, rgba(9, 7, 5, 0) 88%);
   filter: blur(8px);
 }
 
-/* 底部暗角：署名条不压画的下缘 */
-.screen--enter::after {
-  content: "";
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 0;
-  height: clamp(96px, 19vh, 170px);
-  pointer-events: none;
-  background: linear-gradient(to top, rgba(8, 7, 5, 0.78) 0%, rgba(8, 7, 5, 0.42) 46%, rgba(8, 7, 5, 0) 100%);
+/* 底部暗角交给 .backdrop::after 统一处理（避免独立渐变伪元素在 headless 合成时产生横向接缝） */
+.screen--enter .enter-foot {
+  justify-content: space-between;
+}
+
+.screen--enter .kicker {
+  color: rgba(240, 232, 216, 0.8);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.8);
 }
 
 .screen--enter .enter-head,
-.screen--enter .enter-actions,
-.screen--enter .enter-foot {
+.screen--enter .enter-actions {
   position: relative;
+  z-index: 1;
+}
+
+/* 署名条保持绝对定位（底部左右），只提层级 */
+.screen--enter .enter-foot {
   z-index: 1;
 }
 
@@ -63,7 +63,7 @@
 
 .museum-sub {
   margin: 0;
-  color: rgba(240, 232, 216, 0.86);
+  color: rgba(244, 237, 222, 0.94);
   font-size: clamp(12.5px, 1.3vw, 14.5px);
   letter-spacing: 0.5em;
   text-indent: 0.25em;
@@ -79,7 +79,7 @@
 }
 
 .enter-actions .hint {
-  color: rgba(240, 232, 216, 0.62);
+  color: rgba(244, 237, 222, 0.72);
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
 }
 
@@ -801,18 +801,35 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  min-height: 14px;
+  gap: clamp(16px, 2.6vw, 30px);
+  min-height: 16px;
+}
+
+.dot-pair {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .dot {
   display: block;
-  width: 10px;
-  height: 10px;
+  width: var(--dot-size, 10px);
+  height: var(--dot-size, 10px);
   border-radius: 50%;
   background: var(--ink-paper-2);
   opacity: 0.9;
-  transition: all var(--dur-quick) var(--ease-ink);
+}
+
+/* 空心 = 来时；实心 = 此刻 */
+.dot--ghost {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px rgba(232, 224, 207, 0.5);
+  opacity: 0.72;
+}
+
+.dot--ink {
+  background: var(--ink-paper);
+  opacity: 0.92;
 }
 
 .feedback {

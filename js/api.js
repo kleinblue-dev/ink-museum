@@ -218,6 +218,14 @@ export function saveLocalScroll(item, storage) {
   return { ok: false, items: [] };
 }
 
+export const INK_VALUE_MAX = 600000;
+
+export function clampInkValue(value) {
+  const n = Math.round(Number(value));
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return Math.min(INK_VALUE_MAX, n);
+}
+
 export function buildPayload(session, image, mood) {
   return {
     schemaVersion: session.schemaVersion,
@@ -230,7 +238,11 @@ export function buildPayload(session, image, mood) {
       scattered: session.post.scattered,
       mood: mood || session.post.mood
     },
-    ink: { strokes: session.ink.strokes, stamps: session.ink.stamps, ms: session.ink.ms },
+    ink: {
+      strokes: clampInkValue(session.ink.strokes),
+      stamps: clampInkValue(session.ink.stamps),
+      ms: clampInkValue(session.ink.ms)
+    },
     image,
     mood: mood || session.post.mood
   };

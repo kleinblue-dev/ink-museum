@@ -199,6 +199,14 @@ body[data-step="reveal"] .backdrop-layer {
   transition: opacity var(--dur-wash) var(--ease-ink);
 }
 
+body[data-step="enter"] .backdrop::after,
+body[data-step="pre"] .backdrop::after {
+  background:
+    linear-gradient(to bottom, rgba(8, 7, 5, 0.62) 0%, rgba(8, 7, 5, 0.1) 26%, rgba(8, 7, 5, 0) 52%),
+    linear-gradient(to top, rgba(8, 7, 5, 0.8) 0%, rgba(8, 7, 5, 0.5) 18%, rgba(8, 7, 5, 0.12) 34%, rgba(8, 7, 5, 0) 58%),
+    radial-gradient(120% 100% at 50% 45%, transparent 52%, rgba(5, 4, 3, 0.62) 100%);
+}
+
 body[data-step="line"] .backdrop::after,
 body[data-step="ink"] .backdrop::after {
   background:
@@ -335,9 +343,9 @@ body[data-step="ink"] .chrome {
   outline: none;
 }
 
+/* 转场后把焦点交给整屏容器用于读屏播报；不画整屏虚线框（视觉噪音） */
 .screen:focus-visible {
-  outline: 1px dashed rgba(232, 224, 207, 0.22);
-  outline-offset: -10px;
+  outline: none;
 }
 
 .screen.is-leaving {

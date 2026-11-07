@@ -4,30 +4,30 @@
   "note": "背景取自 Wikimedia Commons 公有领域（PD-old / PD-Art / CC0）宋元水墨名作；裁切、去题跋藏印、修补扫描/册页竖缝、暖纸白平衡、近单色、轻暗角由 scripts/assets/fetch_and_compose.py 完成。程序生成部分（宣纸底 / 纸纹 / 图标）不涉第三方版权。",
   "assets": [
     {
-      "id": "water",
+      "id": "bamboo",
       "work": {
-        "title": "水图 · 秋水迥波",
-        "titleEn": "Water Album: The Waving Surface of the Autumn Flood",
-        "artist": "马远",
-        "dynasty": "南宋",
-        "year": "12–13 世纪",
-        "museum": "北京故宫博物院（册页）"
+        "title": "墨竹图",
+        "titleEn": "Ink Bamboo",
+        "artist": "文同",
+        "dynasty": "北宋",
+        "year": "11 世纪",
+        "museum": "台北故宫博物院"
       },
       "sources": [
         {
-          "fileTitle": "File:Ma Yuan - Water Album - The Waving Surface of the Autumn Flood.jpg",
-          "pageUrl": "https://commons.wikimedia.org/wiki/File:Ma_Yuan_-_Water_Album_-_The_Waving_Surface_of_the_Autumn_Flood.jpg",
-          "fileUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2b/Ma_Yuan_-_Water_Album_-_The_Waving_Surface_of_the_Autumn_Flood.jpg",
-          "width": 1708,
-          "height": 1115,
+          "fileTitle": "File:Wen Tong Babmbuk.jpg",
+          "pageUrl": "https://commons.wikimedia.org/wiki/File:Wen_Tong_Babmbuk.jpg",
+          "fileUrl": "https://upload.wikimedia.org/wikipedia/commons/d/de/Wen_Tong_Babmbuk.jpg",
+          "width": 1830,
+          "height": 2880,
           "mime": "image/jpeg",
-          "bytes": 1200194,
+          "bytes": 4768032,
           "license": "Public domain",
           "licenseUrl": "",
-          "artistMeta": "Ma Yuan",
-          "dateMeta": "from 1160 until 1225date QS:P571,+1500-00-00T00:00:00Z/6,P580,+1160-00-00T00:00:00Z/9,P582,+1225-00-",
-          "credit": "http://140.112.185.185/fineart/painter-ch/mayuan/mayuan.htm",
-          "cache": "water_wave.jpg",
+          "artistMeta": "Wen Tong",
+          "dateMeta": "11 век\n(26 January 2009 (original upload date))\n\nOriginal uploader was Евгений Ардаев at ru.wikipedi",
+          "credit": "The image is from: http://ccd.zjonline.com.cn/zgysd003.htm.",
+          "cache": "bamboo_wentong.jpg",
           "downloadWidth": null
         }
       ],
@@ -44,45 +44,45 @@
       "derivatives": [
         {
           "kind": "wide",
-          "file": "assets/bg/water-wide.webp",
+          "file": "assets/bg/bamboo-wide.webp",
           "width": 1600,
           "height": 900,
-          "bytes": 203576,
-          "quality": 71,
+          "bytes": 199748,
+          "quality": 76,
           "budgetBytes": 204800,
           "ok": true,
           "crop": [
-            0.152225,
-            0.179372,
+            0.0,
+            0.205,
             1.0,
-            0.910314
+            0.5623
           ],
-          "note": "裁去左侧题名与藏印，取水波主段；上方留白"
+          "note": "裁去上部题跋，取竹枝横段；右上留白压字"
         },
         {
           "kind": "tall",
-          "file": "assets/bg/water-tall.webp",
+          "file": "assets/bg/bamboo-tall.webp",
           "width": 900,
           "height": 1440,
-          "bytes": 173598,
-          "quality": 74,
+          "bytes": 174786,
+          "quality": 60,
           "budgetBytes": 176128,
           "ok": true,
           "crop": [
-            0.204918,
-            0.0,
-            0.613021,
-            1.0
+            0.1,
+            0.222,
+            0.85,
+            0.985
           ],
-          "note": "竖裁中段水纹，手机端满屏"
+          "note": "竖裁竹枝主体，避开左右缘与下部藏印"
         },
         {
           "kind": "thumb",
-          "file": "assets/bg/water-thumb.webp",
+          "file": "assets/bg/bamboo-thumb.webp",
           "width": 640,
           "height": 420,
-          "bytes": 57784,
-          "quality": 67,
+          "bytes": 58074,
+          "quality": 75,
           "budgetBytes": 58368,
           "ok": true,
           "crop": [
@@ -92,6 +92,95 @@
             1.0
           ],
           "note": "由 wide 中裁 640:420 后缩到 640x420"
+        }
+      ]
+    },
+    {
+      "id": "scroll",
+      "work": {
+        "title": "收卷底 · 宣纸",
+        "titleEn": "Paper ground",
+        "artist": "程序生成",
+        "dynasty": "—",
+        "museum": "—",
+        "generatedBy": "scripts/assets/fetch_and_compose.py"
+      },
+      "license": "程序生成，无第三方权利",
+      "processing": [
+        "FFT 低通噪声云斑 + 纸纤维线 + 轻暗角，逐字节确定"
+      ],
+      "derivatives": [
+        {
+          "kind": "wide",
+          "file": "assets/bg/scroll-wide.webp",
+          "width": 1600,
+          "height": 900,
+          "bytes": 30642,
+          "quality": 95,
+          "budgetBytes": 204800,
+          "ok": true
+        },
+        {
+          "kind": "tall",
+          "file": "assets/bg/scroll-tall.webp",
+          "width": 900,
+          "height": 1440,
+          "bytes": 26836,
+          "quality": 95,
+          "budgetBytes": 204800,
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "paper-tile",
+      "work": {
+        "title": "纸纹平铺贴图",
+        "artist": "程序生成",
+        "generatedBy": "scripts/assets/fetch_and_compose.py"
+      },
+      "license": "程序生成，无第三方权利",
+      "processing": [
+        "周期化 FFT 噪声（可无缝平铺）+ 纸纤维线"
+      ],
+      "derivatives": [
+        {
+          "kind": "tile",
+          "file": "assets/paper-tile.webp",
+          "width": 512,
+          "height": 512,
+          "bytes": 8470,
+          "quality": 95,
+          "budgetBytes": 40960,
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "icons",
+      "work": {
+        "title": "朱砂印章「墨」图标",
+        "artist": "程序生成",
+        "generatedBy": "scripts/assets/fetch_and_compose.py"
+      },
+      "license": "程序生成，无第三方权利",
+      "processing": [
+        "纸底 + 朱砂方章（随机磨损）+ 阴文「墨」+ 轻微旋转；PIL 程序绘制"
+      ],
+      "derivatives": [
+        {
+          "kind": "icon",
+          "file": "assets/icons/icon-512.png",
+          "width": 512,
+          "height": 512,
+          "bytes": 202859
+        },
+        {
+          "kind": "icon",
+          "file": "assets/icons/icon-192.png",
+          "width": 192,
+          "height": 192,
+          "bytes": 35632
         }
       ]
     }

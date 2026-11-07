@@ -209,6 +209,21 @@ export const CONTENT = {
     on: '开'
   },
 
+  // 芥子园墨块（与 data/masks.json 的 11 个 id 一一对应；前台墨块托盘用）
+  stamps: [
+    { id: 'w-wave', label: '水纹', group: '远景' },
+    { id: 'g-tupo', label: '土坡', group: '中景' },
+    { id: 't-liu', label: '柳', group: '中景' },
+    { id: 'h-maowu', label: '茅屋', group: '点缀' },
+    { id: 'h-trellis', label: '花架', group: '点缀' },
+    { id: 'f-zaocha', label: '煎茶', group: '点缀' },
+    { id: 'f-xizhan', label: '洗盏', group: '点缀' },
+    { id: 'f-baoxi', label: '抱膝', group: '点缀' },
+    { id: 'f-xiyao', label: '洗药', group: '点缀' },
+    { id: 'f-yuweng', label: '垂钓', group: '点缀' },
+    { id: 'f-banzeng', label: '扳罾', group: '点缀' }
+  ],
+
   // 墨色调色板（INDEX 与 scenes[].ink.palette 对齐，前台/引擎共用）
   paletteNames: ['墨', '赭', '青', '朱']
 };

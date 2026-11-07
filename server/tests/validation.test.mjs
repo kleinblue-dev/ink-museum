@@ -123,7 +123,7 @@ test('ink 校验：负数 / 超上限 / 非整数 / 缺失', async (t) => {
   const baseUrl = await app(t);
   const cases = [
     (payload) => { payload.ink.strokes = -1; },
-    (payload) => { payload.ink.strokes = 100001; },
+    (payload) => { payload.ink.strokes = 600001; },
     (payload) => { payload.ink.ms = 1.5; },
     (payload) => { delete payload.ink.ms; },
     (payload) => { payload.ink = 'nope'; }
@@ -133,6 +133,24 @@ test('ink 校验：负数 / 超上限 / 非整数 / 缺失', async (t) => {
     mutate(payload);
     await expectError(baseUrl, await postScroll(baseUrl, payload), 400, 'invalid_ink');
   }
+});
+
+test('ink 上限 600000：30–48 万毫秒合法（5–8 分钟动线），600001 拒绝', async (t) => {
+  const baseUrl = await app(t);
+
+  const realJourney = samplePayload();
+  realJourney.ink = { strokes: 5000, stamps: 200, ms: 480000 };
+  assert.equal((await postScroll(baseUrl, realJourney)).status, 201);
+
+  const boundary = samplePayload();
+  boundary.ink = { strokes: 600000, stamps: 600000, ms: 600000 };
+  assert.equal((await postScroll(baseUrl, boundary)).status, 201);
+
+  const over = samplePayload();
+  over.ink = { strokes: 0, stamps: 0, ms: 600001 };
+  const response = await postScroll(baseUrl, over);
+  assert.equal(response.status, 400);
+  assert.equal((await response.json()).error.code, 'invalid_ink');
 });
 
 test('image 校验：缺失 / 非 data URL / 非法 base64 / magic 不符', async (t) => {
