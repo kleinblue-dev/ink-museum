@@ -743,6 +743,11 @@ export function createJourney(options) {
           stamps: Math.max(0, Math.round(Number(stats.stamps) || 0)),
           ms: Math.max(0, Math.round(Number(stats.ms) || 0))
         };
+        if (inkState) {
+          // 落下一块墨后自动收起托盘，让手看见画面
+          if (session.ink.stamps > (inkState.lastStamps || 0) && inkState.trayOpen) setInkTrayOpen(inkState, false);
+          inkState.lastStamps = session.ink.stamps;
+        }
         refreshInkButtons();
         emit();
       }
@@ -774,6 +779,8 @@ export function createJourney(options) {
       instance.setTool(state.tool);
       instance.setTone(state.tone);
       instance.setSize(state.size);
+      if (typeof instance.setStamp === 'function') instance.setStamp(state.stampId);
+      if (typeof instance.setRotation === 'function') instance.setRotation(state.rotation || 0);
     } catch (err) {
       /* ignore */
     }
@@ -799,7 +806,18 @@ export function createJourney(options) {
       clearBtn: null,
       snapshot: null,
       cssWidth: 0,
-      cssHeight: 0
+      cssHeight: 0,
+      stampId: CONTENT.stamps && CONTENT.stamps[0] ? CONTENT.stamps[0].id : null,
+      stampLabel: CONTENT.stamps && CONTENT.stamps[0] ? CONTENT.stamps[0].label || '' : '',
+      brushBtn: null,
+      stampBtn: null,
+      stampNameNode: null,
+      tray: null,
+      trayOpen: false,
+      trayButtons: {},
+      trayThumbsDone: false,
+      rotation: 0,
+      lastStamps: 0
     };
     return inkState;
   }
@@ -840,25 +858,210 @@ export function createJourney(options) {
     if (inkState.clearBtn) inkState.clearBtn.disabled = !hasInk;
   }
 
+  // ---------- 墨块托盘（v1.1：芥子园 11 块，分组选块构图） ----------
+
+  function stampCatalog() {
+    const stamps = Array.isArray(CONTENT.stamps) ? CONTENT.stamps : [];
+    return stamps.filter((stamp) => stamp && typeof stamp.id === 'string' && stamp.id.length);
+  }
+
+  function findStampDef(id) {
+    const stamps = stampCatalog();
+    for (let i = 0; i < stamps.length; i += 1) {
+      if (stamps[i].id === id) return stamps[i];
+    }
+    return null;
+  }
+
+  function defaultStampId(engine) {
+    if (engine && Array.isArray(engine.stampIds) && engine.stampIds.length) return engine.stampIds[0];
+    const stamps = stampCatalog();
+    return stamps.length ? stamps[0].id : null;
+  }
+
+  function updateInkStampName(state) {
+    if (!state || !state.stampNameNode) return;
+    const show = state.tool === 'stamp' && Boolean(state.stampLabel);
+    state.stampNameNode.textContent = show ? state.stampLabel : '';
+    state.stampNameNode.hidden = !show;
+  }
+
+  function updateInkStampButtons(state) {
+    if (!state || !state.trayButtons) return;
+    const ids = Object.keys(state.trayButtons);
+    for (let i = 0; i < ids.length; i += 1) {
+      const entry = state.trayButtons[ids[i]];
+      if (entry && entry.btn) entry.btn.setAttribute('aria-pressed', ids[i] === state.stampId ? 'true' : 'false');
+    }
+  }
+
+  function renderInkTrayThumbs(state) {
+    if (!state || !state.tray) return;
+    const engine = inkEngine();
+    if (!engine || typeof engine.getStampThumb !== 'function') return;
+    const ready = typeof engine.isReady === 'function' ? engine.isReady() : true;
+    if (!ready) return;
+    const ids = Object.keys(state.trayButtons);
+    for (let i = 0; i < ids.length; i += 1) {
+      const entry = state.trayButtons[ids[i]];
+      if (!entry || !entry.thumb) continue;
+      try {
+        const url = engine.getStampThumb(ids[i], { width: 96 });
+        if (url) {
+          entry.thumb.src = url;
+          entry.thumb.dataset.ready = '1';
+        }
+      } catch (err) {
+        /* ignore */
+      }
+    }
+    state.trayThumbsDone = true;
+  }
+
+  function selectInkTool(state, tool) {
+    if (!state) return;
+    state.tool = tool === 'stamp' ? 'stamp' : 'brush';
+    const engine = inkEngine();
+    if (engine && typeof engine.setTool === 'function') engine.setTool(state.tool);
+    if (state.brushBtn) state.brushBtn.setAttribute('aria-pressed', state.tool === 'brush' ? 'true' : 'false');
+    if (state.stampBtn) state.stampBtn.setAttribute('aria-pressed', state.tool === 'stamp' ? 'true' : 'false');
+    updateInkStampName(state);
+  }
+
+  function selectInkStamp(state, id) {
+    if (!state || !id) return;
+    state.stampId = id;
+    const def = findStampDef(id);
+    state.stampLabel = def ? def.label || '' : '';
+    const engine = inkEngine();
+    if (engine && typeof engine.setStamp === 'function') engine.setStamp(id);
+    if (state.tool !== 'stamp') selectInkTool(state, 'stamp');
+    updateInkStampButtons(state);
+    updateInkStampName(state);
+  }
+
+  function setInkTrayOpen(state, open) {
+    if (!state || !state.tray) return;
+    state.trayOpen = Boolean(open);
+    state.tray.hidden = !state.trayOpen;
+    state.tray.classList.toggle('is-open', state.trayOpen);
+    if (state.stampBtn) state.stampBtn.setAttribute('aria-expanded', state.trayOpen ? 'true' : 'false');
+    if (!state.trayOpen) return;
+    if (!state.stampId) {
+      const engine = inkEngine();
+      state.stampId = defaultStampId(engine);
+      const def = findStampDef(state.stampId);
+      state.stampLabel = def ? def.label || '' : state.stampLabel;
+      if (engine && typeof engine.setStamp === 'function' && state.stampId) engine.setStamp(state.stampId);
+      updateInkStampButtons(state);
+      updateInkStampName(state);
+    }
+    renderInkTrayThumbs(state);
+  }
+
+  function buildStampTray(state) {
+    const ui = CONTENT.ui || {};
+    state.trayButtons = {};
+    const tray = el('div', {
+      class: 'ink-tray' + (state.trayOpen ? ' is-open' : ''),
+      role: 'group',
+      'aria-label': ui.stamp || '',
+      hidden: !state.trayOpen
+    });
+    const groupsBox = el('div', { class: 'ink-tray-groups' });
+    const stamps = stampCatalog();
+    const order = [];
+    const grouped = {};
+    for (let i = 0; i < stamps.length; i += 1) {
+      const stamp = stamps[i];
+      const group = stamp.group || '';
+      if (!grouped[group]) {
+        grouped[group] = [];
+        order.push(group);
+      }
+      grouped[group].push(stamp);
+    }
+    for (let g = 0; g < order.length; g += 1) {
+      const groupName = order[g];
+      const groupEl = el('div', { class: 'ink-stamp-group' });
+      if (groupName) groupEl.appendChild(el('span', { class: 'ink-stamp-group-name', text: groupName }));
+      const row = el('div', { class: 'ink-stamp-row' });
+      const items = grouped[groupName];
+      for (let i = 0; i < items.length; i += 1) {
+        const stamp = items[i];
+        const thumb = el('img', { class: 'ink-stamp-thumb', alt: '', decoding: 'async' });
+        const stampButton = el(
+          'button',
+          {
+            class: 'ink-stamp-btn',
+            type: 'button',
+            'aria-label': stamp.label || '',
+            'aria-pressed': stamp.id === state.stampId ? 'true' : 'false'
+          },
+          [thumb, el('span', { class: 'ink-stamp-label', text: stamp.label || '' })]
+        );
+        stampButton.addEventListener('click', () => selectInkStamp(state, stamp.id));
+        state.trayButtons[stamp.id] = { btn: stampButton, thumb };
+        row.appendChild(stampButton);
+      }
+      groupEl.appendChild(row);
+      groupsBox.appendChild(groupEl);
+    }
+    tray.appendChild(groupsBox);
+
+    const foot = el('div', { class: 'ink-tray-foot' });
+    foot.appendChild(el('span', { class: 'ink-tray-foot-label', text: ui.rotate || '' }));
+    const rotationInput = el('input', {
+      type: 'range',
+      min: -45,
+      max: 45,
+      step: 5,
+      value: '0',
+      'aria-label': ui.rotate || ''
+    });
+    rotationInput.value = String(state.rotation || 0);
+    rotationInput.addEventListener('input', () => {
+      const value = Number(rotationInput.value);
+      state.rotation = Number.isFinite(value) ? value : 0;
+      const engine = inkEngine();
+      if (engine && typeof engine.setRotation === 'function') engine.setRotation(state.rotation);
+    });
+    foot.appendChild(rotationInput);
+    tray.appendChild(foot);
+    return tray;
+  }
+
   function buildInkToolbar(state) {
     const ui = CONTENT.ui || {};
     const ink = CONTENT.ink || {};
     const bar = el('div', { class: 'ink-bar', role: 'toolbar', 'aria-label': ink.sign || '' });
+    const tray = buildStampTray(state);
+    state.tray = tray;
 
-    const toolGroup = el('div', { class: 'seg', role: 'group', 'aria-label': ui.brush || '' });
+    const toolGroup = el('div', { class: 'seg', role: 'group', 'aria-label': [ui.brush, ui.stamp].filter(Boolean).join(' / ') });
     const brushBtn = button(ui.brush || '', { class: 'seg-btn', pressed: state.tool === 'brush' });
     const stampBtn = button(ui.stamp || '', { class: 'seg-btn', pressed: state.tool === 'stamp' });
-    function selectTool(tool) {
-      state.tool = tool;
-      brushBtn.setAttribute('aria-pressed', tool === 'brush' ? 'true' : 'false');
-      stampBtn.setAttribute('aria-pressed', tool === 'stamp' ? 'true' : 'false');
-      const engine = inkEngine();
-      if (engine && typeof engine.setTool === 'function') engine.setTool(tool);
-    }
-    brushBtn.addEventListener('click', () => selectTool('brush'));
-    stampBtn.addEventListener('click', () => selectTool('stamp'));
+    stampBtn.setAttribute('aria-expanded', state.trayOpen ? 'true' : 'false');
+    state.brushBtn = brushBtn;
+    state.stampBtn = stampBtn;
+    brushBtn.addEventListener('click', () => {
+      selectInkTool(state, 'brush');
+      setInkTrayOpen(state, false);
+    });
+    stampBtn.addEventListener('click', () => {
+      if (state.tool === 'stamp') {
+        setInkTrayOpen(state, !state.trayOpen);
+      } else {
+        selectInkTool(state, 'stamp');
+        setInkTrayOpen(state, true);
+      }
+    });
     toolGroup.appendChild(brushBtn);
     toolGroup.appendChild(stampBtn);
+
+    const stampName = el('span', { class: 'ink-stamp-current', hidden: true });
+    state.stampNameNode = stampName;
+    updateInkStampName(state);
 
     const toneLabels = ui.tone || [];
     const toneGroup = el('div', { class: 'seg', role: 'group', 'aria-label': ui.tone ? ui.tone.join(' / ') : '' });
@@ -873,6 +1076,7 @@ export function createJourney(options) {
         }
         const engine = inkEngine();
         if (engine && typeof engine.setTone === 'function') engine.setTone(toneKey);
+        if (state.trayOpen) renderInkTrayThumbs(state);
       });
       toneButtons.push(toneBtn);
       toneGroup.appendChild(toneBtn);
@@ -927,14 +1131,14 @@ export function createJourney(options) {
     finishWrap.appendChild(finishBtn);
 
     bar.appendChild(toolGroup);
+    bar.appendChild(stampName);
     bar.appendChild(toneGroup);
     bar.appendChild(sizeField);
     bar.appendChild(undoBtn);
     bar.appendChild(clearBtn);
     bar.appendChild(finishWrap);
-    return bar;
+    return { bar, tray };
   }
-
   function renderInk() {
     const scene = currentScene();
     if (!scene) {
@@ -952,8 +1156,20 @@ export function createJourney(options) {
     state.head = head;
     node.appendChild(head);
     node.appendChild(state.canvas);
-    node.appendChild(el('div', { class: 'ink-toolbar' }, [buildInkToolbar(state)]));
+    const toolbar = el('div', { class: 'ink-toolbar' });
+    const toolbarParts = buildInkToolbar(state);
+    toolbar.appendChild(toolbarParts.tray);
+    toolbar.appendChild(toolbarParts.bar);
+    node.appendChild(toolbar);
     node.appendChild(makeBackButton('line'));
+
+    node.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape' || !state.trayOpen) return;
+      event.preventDefault();
+      event.stopPropagation();
+      setInkTrayOpen(state, false);
+      focusNode(state.stampBtn || node);
+    });
 
     node.__onShown = () => {
       const engine = inkEngine();
@@ -961,8 +1177,34 @@ export function createJourney(options) {
         try {
           engine.setInteractive(true);
           if (typeof engine.resize === 'function') engine.resize();
+          if (typeof engine.setRotation === 'function') engine.setRotation(state.rotation || 0);
+          if (!state.stampId) {
+            state.stampId = defaultStampId(engine);
+            const def = findStampDef(state.stampId);
+            state.stampLabel = def ? def.label || '' : state.stampLabel;
+          }
+          if (typeof engine.setStamp === 'function' && state.stampId) engine.setStamp(state.stampId);
         } catch (err) {
           /* ignore */
+        }
+        updateInkStampButtons(state);
+        updateInkStampName(state);
+        if (state.trayOpen) renderInkTrayThumbs(state);
+        if (engine.ready && typeof engine.ready.then === 'function') {
+          engine.ready
+            .then(() => {
+              if (!inkState || inkState !== state) return;
+              if (!state.stampId) {
+                state.stampId = defaultStampId(engine);
+                const def = findStampDef(state.stampId);
+                state.stampLabel = def ? def.label || '' : state.stampLabel;
+              }
+              if (typeof engine.setStamp === 'function' && state.stampId) engine.setStamp(state.stampId);
+              renderInkTrayThumbs(state);
+              updateInkStampButtons(state);
+              updateInkStampName(state);
+            })
+            .catch(() => {});
         }
       }
       refreshInkButtons();

@@ -538,7 +538,10 @@
   left: 0;
   z-index: 3;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
   padding: 22px calc(var(--safe-r) + clamp(10px, 2vw, 22px)) calc(var(--safe-b) + 10px) calc(var(--safe-l) + clamp(10px, 2vw, 22px));
   background: linear-gradient(to top, rgba(10, 9, 7, 0.92) 0%, rgba(10, 9, 7, 0.62) 62%, rgba(10, 9, 7, 0));
   pointer-events: none;
@@ -676,6 +679,215 @@
   font-size: 10px;
   letter-spacing: 0.12em;
   white-space: nowrap;
+}
+
+/* ---------- 墨块托盘（v1.1） ---------- */
+
+.ink-stamp-current {
+  color: var(--ink-faint);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-indent: 0.09em;
+  white-space: nowrap;
+}
+
+.ink-tray {
+  width: min(920px, 100%);
+  padding: 10px 12px 8px;
+  border: 1px solid var(--ink-line);
+  border-radius: 2px;
+  background: rgba(12, 10, 8, 0.78);
+  box-shadow: 0 -14px 34px -22px rgba(0, 0, 0, 0.9);
+  pointer-events: auto;
+  animation: tray-in 320ms var(--ease-out) both;
+}
+
+.ink-tray[hidden] {
+  display: none;
+}
+
+@keyframes tray-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.ink-tray-groups {
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(12px, 2.2vw, 26px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(232, 224, 207, 0.24) transparent;
+}
+
+.ink-tray-groups::-webkit-scrollbar {
+  height: 5px;
+}
+
+.ink-tray-groups::-webkit-scrollbar-thumb {
+  background: rgba(232, 224, 207, 0.22);
+}
+
+.ink-stamp-group {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ink-stamp-group-name {
+  color: var(--ink-faint);
+  font-size: 9.5px;
+  letter-spacing: 0.3em;
+  text-indent: 0.15em;
+}
+
+.ink-stamp-row {
+  display: flex;
+  gap: 6px;
+}
+
+.ink-stamp-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 56px;
+  padding: 5px 2px 4px;
+  color: var(--ink-muted);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-indent: 0.08em;
+  border: 1px solid var(--ink-line);
+  border-radius: 1px;
+  background: rgba(233, 224, 205, 0.05);
+  transition:
+    color var(--dur-quick) var(--ease-ink),
+    border-color var(--dur-quick) var(--ease-ink),
+    background var(--dur-quick) var(--ease-ink);
+}
+
+.ink-stamp-btn:hover {
+  color: var(--ink-paper);
+  border-color: var(--ink-line-strong);
+  background: rgba(233, 224, 205, 0.09);
+}
+
+.ink-stamp-btn[aria-pressed="true"] {
+  color: var(--ink-paper);
+  border-color: var(--seal);
+  background: rgba(158, 59, 46, 0.16);
+  box-shadow: inset 0 -2px 0 var(--seal);
+}
+
+.ink-stamp-thumb {
+  width: 44px;
+  height: 32px;
+  padding: 2px;
+  object-fit: contain;
+  /* 缩略图是透明底墨块，垫一小方宣纸色才不会在黑工具条上“消失” */
+  background: linear-gradient(150deg, #e9e0cd 0%, #d7cbb4 100%);
+  box-shadow: inset 0 0 0 1px rgba(10, 8, 6, 0.28);
+  opacity: 0;
+  transition: opacity 300ms var(--ease-ink);
+}
+
+.ink-stamp-thumb[data-ready="1"] {
+  opacity: 0.94;
+}
+
+.ink-stamp-label {
+  line-height: 1;
+}
+
+.ink-tray-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px solid var(--ink-line);
+  color: var(--ink-faint);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+}
+
+.ink-tray-foot-label {
+  text-indent: 0.1em;
+}
+
+.ink-tray-foot input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: clamp(96px, 16vw, 160px);
+  height: 24px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.ink-tray-foot input[type="range"]::-webkit-slider-runnable-track {
+  height: 2px;
+  background: rgba(232, 224, 207, 0.2);
+}
+
+.ink-tray-foot input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  margin-top: -5px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ink-paper-2);
+}
+
+.ink-tray-foot input[type="range"]::-moz-range-track {
+  height: 2px;
+  border: 0;
+  background: rgba(232, 224, 207, 0.2);
+}
+
+.ink-tray-foot input[type="range"]::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ink-paper-2);
+}
+
+@media (max-width: 560px) {
+  .ink-tray {
+    padding: 8px 8px 6px;
+  }
+
+  .ink-stamp-btn {
+    width: 50px;
+    font-size: 9.5px;
+  }
+
+  .ink-stamp-thumb {
+    width: 38px;
+    height: 28px;
+  }
+
+  .ink-stamp-row {
+    gap: 5px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ink-tray {
+    animation: none;
+  }
 }
 
 /* ============ post 此刻 ============ */

@@ -592,3 +592,59 @@ export async function prepareOutDir(dir, { clean = true } = {}) {
   await mkdir(resolved, { recursive: true });
   return { outDir: resolved, cleaned: clean && insideArtifacts, rel: rel(resolved) };
 }
+
+// ---------------------------------------------------------------------------
+// QA full suite 专用：显式启动指定入口的服务（干净 PORT/环境变量，不复用已有进程）
+// ---------------------------------------------------------------------------
+
+export async function spawnQaServer({ baseURL, entryRel, env = {}, serverLogPath = null, timeoutMs = 30000 } = {}) {
+  const normalizedBase = String(baseURL || '').replace(/\/+$/, '');
+  if (!normalizedBase) throw new InfraError('spawnQaServer 需要 baseURL');
+  if (!entryRel) throw new InfraError('spawnQaServer 需要 entryRel');
+  const entry = path.join(PROJECT_ROOT, entryRel);
+  if (!existsSync(entry)) throw new InfraError('QA 服务入口不存在：' + entryRel);
+
+  let logStream = null;
+  if (serverLogPath) {
+    try {
+      await mkdir(path.dirname(serverLogPath), { recursive: true });
+      logStream = createWriteStream(serverLogPath, { flags: 'w' });
+    } catch { logStream = null; }
+  }
+  const parsed = new URL(normalizedBase);
+  const child = spawn(process.execPath, [entry], {
+    cwd: PROJECT_ROOT,
+    env: { ...process.env, PORT: String(parsed.port || 8790), HOST: parsed.hostname || '127.0.0.1', ...env },
+    stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+  });
+  let tail = '';
+  const onData = (chunk) => {
+    const s = String(chunk);
+    tail = (tail + s).slice(-8000);
+    if (logStream) logStream.write(s);
+  };
+  child.stdout.on('data', onData);
+  child.stderr.on('data', onData);
+
+  const ready = await waitForHttp(normalizedBase, { timeoutMs, intervalMs: 250 });
+  if (!ready.ok) {
+    await stopChild(child);
+    if (logStream) logStream.end();
+    throw new InfraError('QA 服务启动失败（' + entryRel + ' @ ' + normalizedBase + '）：' + (ready.lastError || '超时') + '；输出：\n' + tail.slice(-2000));
+  }
+  return {
+    mode: 'spawned',
+    baseURL: normalizedBase,
+    startedByUs: true,
+    pid: child.pid,
+    entryRel,
+    warnings: [],
+    serverLogRel: serverLogPath ? rel(serverLogPath) : null,
+    outputTail: () => tail,
+    stop: async () => {
+      await stopChild(child);
+      if (logStream) logStream.end();
+    },
+  };
+}

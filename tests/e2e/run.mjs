@@ -239,6 +239,12 @@ async function main() {
   let server = null;
   let browserHandle = null;
   try {
+    if (args.suite === 'full') {
+      const { runFullSuite } = await import('./full.mjs');
+      result.projectSnapshot = await snapshotProject();
+      await runFullSuite({ result, outDir: prepared.outDir, args });
+      return;
+    }
     server = await ensureServer({ baseURL: args.base, serverLogPath: path.join(prepared.outDir, 'server.log') });
     result.server = {
       mode: server.mode,

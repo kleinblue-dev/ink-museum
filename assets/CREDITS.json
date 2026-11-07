@@ -4,6 +4,282 @@
   "note": "背景取自 Wikimedia Commons 公有领域（PD-old / PD-Art / CC0）宋元水墨名作；裁切、去题跋藏印、修补扫描/册页竖缝、暖纸白平衡、近单色、轻暗角由 scripts/assets/fetch_and_compose.py 完成。程序生成部分（宣纸底 / 纸纹 / 图标）不涉第三方版权。",
   "assets": [
     {
+      "id": "entry",
+      "work": {
+        "title": "富春山居图（无用师卷）",
+        "titleEn": "Dwelling in the Fuchun Mountains",
+        "artist": "黄公望",
+        "dynasty": "元",
+        "year": "1347–1351",
+        "museum": "台北故宫博物院"
+      },
+      "sources": [
+        {
+          "fileTitle": "File:富春山居圖(無用師卷).jpg",
+          "pageUrl": "https://commons.wikimedia.org/wiki/File:%E5%AF%8C%E6%98%A5%E5%B1%B1%E5%B1%85%E5%9C%96%28%E7%84%A1%E7%94%A8%E5%B8%AB%E5%8D%B7%29.jpg",
+          "fileUrl": "https://upload.wikimedia.org/wikipedia/commons/6/6d/%E5%AF%8C%E6%98%A5%E5%B1%B1%E5%B1%85%E5%9C%96%28%E7%84%A1%E7%94%A8%E5%B8%AB%E5%8D%B7%29.jpg",
+          "width": 26134,
+          "height": 900,
+          "mime": "image/jpeg",
+          "bytes": 7536099,
+          "license": "Public domain",
+          "licenseUrl": "",
+          "artistMeta": "Huang Gongwang",
+          "dateMeta": "from 1347 until 1351date QS:P571,+1350-00-00T00:00:00Z/7,P580,+1347-00-00T00:00:00Z/9,P582,+1351-00-",
+          "credit": "http://www.npm.gov.tw/exh100/fuchun/ch_02_1.html#t00",
+          "cache": "entry_full.jpg",
+          "downloadWidth": null
+        }
+      ],
+      "license": "PD-Art / PD-old（公有领域）",
+      "processing": [
+        "裁去色卡/边框/装裱/题跋/藏印区域（裁切框见 derivatives[].crop 归一化坐标）",
+        "竖向扫描/册页接缝以邻近纹理克隆修补（水图）",
+        "低通光照场校正（去扫描拼缝亮度台阶与老照片光照不均）",
+        "暖纸白平衡 + 近单色双色调（纸白 #f2e8d8 / 深墨 #1c1813）",
+        "亮度中值去噪（保留墨线边缘）；轻度锐化；暗角 ≤12%",
+        "出图前做轻柔化（只削极高频纸纹）以达标体积，观感保持墨线清晰",
+        "不添加任何文字/水印"
+      ],
+      "derivatives": [
+        {
+          "kind": "wide",
+          "file": "assets/bg/entry-wide.webp",
+          "width": 1600,
+          "height": 900,
+          "bytes": 197202,
+          "quality": 76,
+          "budgetBytes": 204800,
+          "ok": true,
+          "crop": [
+            0.434684,
+            0.0,
+            0.49388,
+            0.966667
+          ],
+          "note": "无用师卷主峰与洲渚；左缘右移 400px 避开扫描拼缝"
+        },
+        {
+          "kind": "tall",
+          "file": "assets/bg/entry-tall.webp",
+          "width": 900,
+          "height": 1440,
+          "bytes": 165768,
+          "quality": 92,
+          "budgetBytes": 176128,
+          "ok": true,
+          "crop": [
+            0.408663,
+            0.0,
+            0.429479,
+            0.966667
+          ],
+          "note": "卷首远岫、江面与洲渚；下三分之一为留白水面，便于压字"
+        },
+        {
+          "kind": "thumb",
+          "file": "assets/bg/entry-thumb.webp",
+          "width": 640,
+          "height": 420,
+          "bytes": 57946,
+          "quality": 78,
+          "budgetBytes": 58368,
+          "ok": true,
+          "crop": [
+            0.0715625,
+            0.0,
+            0.9284375,
+            1.0
+          ],
+          "note": "由 wide 中裁 640:420 后缩到 640x420"
+        }
+      ]
+    },
+    {
+      "id": "spring",
+      "work": {
+        "title": "早春图",
+        "titleEn": "Early Spring",
+        "artist": "郭熙",
+        "dynasty": "北宋",
+        "year": "1072（熙宁五年）",
+        "museum": "台北故宫博物院"
+      },
+      "sources": [
+        {
+          "fileTitle": "File:Guo Xi - Early Spring, upscaled.jpg",
+          "pageUrl": "https://commons.wikimedia.org/wiki/File:Guo_Xi_-_Early_Spring%2C_upscaled.jpg",
+          "fileUrl": "https://upload.wikimedia.org/wikipedia/commons/7/72/Guo_Xi_-_Early_Spring%2C_upscaled.jpg",
+          "width": 4272,
+          "height": 6240,
+          "mime": "image/jpeg",
+          "bytes": 4003604,
+          "license": "Public domain",
+          "licenseUrl": "",
+          "artistMeta": "Guo Xi",
+          "dateMeta": "1072date QS:P571,+1072-00-00T00:00:00Z/9",
+          "credit": "http://www.comuseum.com/wp-content/uploads/2016/11/guo-xi_early-spring.jpg",
+          "cache": "spring.jpg",
+          "downloadWidth": 3840
+        }
+      ],
+      "license": "PD-Art / PD-old（公有领域）",
+      "processing": [
+        "裁去色卡/边框/装裱/题跋/藏印区域（裁切框见 derivatives[].crop 归一化坐标）",
+        "竖向扫描/册页接缝以邻近纹理克隆修补（水图）",
+        "低通光照场校正（去扫描拼缝亮度台阶与老照片光照不均）",
+        "暖纸白平衡 + 近单色双色调（纸白 #f2e8d8 / 深墨 #1c1813）",
+        "亮度中值去噪（保留墨线边缘）；轻度锐化；暗角 ≤12%",
+        "出图前做轻柔化（只削极高频纸纹）以达标体积，观感保持墨线清晰",
+        "不添加任何文字/水印"
+      ],
+      "derivatives": [
+        {
+          "kind": "wide",
+          "file": "assets/bg/spring-wide.webp",
+          "width": 1600,
+          "height": 900,
+          "bytes": 201992,
+          "quality": 84,
+          "budgetBytes": 204800,
+          "ok": true,
+          "crop": [
+            0.090104,
+            0.3,
+            0.9,
+            0.612345
+          ],
+          "note": "中部山体与飞瀑横带；避开四周藏印与乾隆题诗"
+        },
+        {
+          "kind": "tall",
+          "file": "assets/bg/spring-tall.webp",
+          "width": 900,
+          "height": 1440,
+          "bytes": 174820,
+          "quality": 63,
+          "budgetBytes": 176128,
+          "ok": true,
+          "crop": [
+            0.090104,
+            0.095027,
+            0.9,
+            0.985
+          ],
+          "note": "整幅竖轴（略去上下题印边缘），手机端满屏"
+        },
+        {
+          "kind": "thumb",
+          "file": "assets/bg/spring-thumb.webp",
+          "width": 640,
+          "height": 420,
+          "bytes": 58116,
+          "quality": 78,
+          "budgetBytes": 58368,
+          "ok": true,
+          "crop": [
+            0.0715625,
+            0.0,
+            0.9284375,
+            1.0
+          ],
+          "note": "由 wide 中裁 640:420 后缩到 640x420"
+        }
+      ]
+    },
+    {
+      "id": "water",
+      "work": {
+        "title": "水图 · 秋水迥波",
+        "titleEn": "Water Album: The Waving Surface of the Autumn Flood",
+        "artist": "马远",
+        "dynasty": "南宋",
+        "year": "12–13 世纪",
+        "museum": "北京故宫博物院（册页）"
+      },
+      "sources": [
+        {
+          "fileTitle": "File:Ma Yuan - Water Album - The Waving Surface of the Autumn Flood.jpg",
+          "pageUrl": "https://commons.wikimedia.org/wiki/File:Ma_Yuan_-_Water_Album_-_The_Waving_Surface_of_the_Autumn_Flood.jpg",
+          "fileUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2b/Ma_Yuan_-_Water_Album_-_The_Waving_Surface_of_the_Autumn_Flood.jpg",
+          "width": 1708,
+          "height": 1115,
+          "mime": "image/jpeg",
+          "bytes": 1200194,
+          "license": "Public domain",
+          "licenseUrl": "",
+          "artistMeta": "Ma Yuan",
+          "dateMeta": "from 1160 until 1225date QS:P571,+1500-00-00T00:00:00Z/6,P580,+1160-00-00T00:00:00Z/9,P582,+1225-00-",
+          "credit": "http://140.112.185.185/fineart/painter-ch/mayuan/mayuan.htm",
+          "cache": "water_wave.jpg",
+          "downloadWidth": null
+        }
+      ],
+      "license": "PD-Art / PD-old（公有领域）",
+      "processing": [
+        "裁去色卡/边框/装裱/题跋/藏印区域（裁切框见 derivatives[].crop 归一化坐标）",
+        "竖向扫描/册页接缝以邻近纹理克隆修补（水图）",
+        "低通光照场校正（去扫描拼缝亮度台阶与老照片光照不均）",
+        "暖纸白平衡 + 近单色双色调（纸白 #f2e8d8 / 深墨 #1c1813）",
+        "亮度中值去噪（保留墨线边缘）；轻度锐化；暗角 ≤12%",
+        "出图前做轻柔化（只削极高频纸纹）以达标体积，观感保持墨线清晰",
+        "不添加任何文字/水印"
+      ],
+      "derivatives": [
+        {
+          "kind": "wide",
+          "file": "assets/bg/water-wide.webp",
+          "width": 1600,
+          "height": 900,
+          "bytes": 203576,
+          "quality": 71,
+          "budgetBytes": 204800,
+          "ok": true,
+          "crop": [
+            0.152225,
+            0.179372,
+            1.0,
+            0.910314
+          ],
+          "note": "裁去左侧题名与藏印，取水波主段；上方留白"
+        },
+        {
+          "kind": "tall",
+          "file": "assets/bg/water-tall.webp",
+          "width": 900,
+          "height": 1440,
+          "bytes": 173598,
+          "quality": 74,
+          "budgetBytes": 176128,
+          "ok": true,
+          "crop": [
+            0.204918,
+            0.0,
+            0.613021,
+            1.0
+          ],
+          "note": "竖裁中段水纹，手机端满屏"
+        },
+        {
+          "kind": "thumb",
+          "file": "assets/bg/water-thumb.webp",
+          "width": 640,
+          "height": 420,
+          "bytes": 57784,
+          "quality": 67,
+          "budgetBytes": 58368,
+          "ok": true,
+          "crop": [
+            0.0715625,
+            0.0,
+            0.9284375,
+            1.0
+          ],
+          "note": "由 wide 中裁 640:420 后缩到 640x420"
+        }
+      ]
+    },
+    {
       "id": "bamboo",
       "work": {
         "title": "墨竹图",
@@ -83,6 +359,98 @@
           "height": 420,
           "bytes": 58074,
           "quality": 75,
+          "budgetBytes": 58368,
+          "ok": true,
+          "crop": [
+            0.0715625,
+            0.0,
+            0.9284375,
+            1.0
+          ],
+          "note": "由 wide 中裁 640:420 后缩到 640x420"
+        }
+      ]
+    },
+    {
+      "id": "pavilion",
+      "work": {
+        "title": "容膝斋图",
+        "titleEn": "Rongxi Studio",
+        "artist": "倪瓒",
+        "dynasty": "元",
+        "year": "1372（洪武五年）",
+        "museum": "台北故宫博物院"
+      },
+      "sources": [
+        {
+          "fileTitle": "File:Ni Zan. The Rongxi Studio.1372. 74,7x35,3. National Palace Museum, Taipei.jpg",
+          "pageUrl": "https://commons.wikimedia.org/wiki/File:Ni_Zan._The_Rongxi_Studio.1372._74%2C7x35%2C3._National_Palace_Museum%2C_Taipei.jpg",
+          "fileUrl": "https://upload.wikimedia.org/wikipedia/commons/0/09/Ni_Zan._The_Rongxi_Studio.1372._74%2C7x35%2C3._National_Palace_Museum%2C_Taipei.jpg",
+          "width": 1788,
+          "height": 3674,
+          "mime": "image/jpeg",
+          "bytes": 5214427,
+          "license": "Public domain",
+          "licenseUrl": "",
+          "artistMeta": "Ni Zan",
+          "dateMeta": "1372date QS:P571,+1372-00-00T00:00:00Z/9",
+          "credit": "http://www.npm.gov.tw/en/collection/selections_02.htm?docno=98&amp;catno=15&amp;pageno=3",
+          "cache": "pavilion.jpg",
+          "downloadWidth": null
+        }
+      ],
+      "license": "PD-Art / PD-old（公有领域）",
+      "processing": [
+        "裁去色卡/边框/装裱/题跋/藏印区域（裁切框见 derivatives[].crop 归一化坐标）",
+        "竖向扫描/册页接缝以邻近纹理克隆修补（水图）",
+        "低通光照场校正（去扫描拼缝亮度台阶与老照片光照不均）",
+        "暖纸白平衡 + 近单色双色调（纸白 #f2e8d8 / 深墨 #1c1813）",
+        "亮度中值去噪（保留墨线边缘）；轻度锐化；暗角 ≤12%",
+        "出图前做轻柔化（只削极高频纸纹）以达标体积，观感保持墨线清晰",
+        "不添加任何文字/水印"
+      ],
+      "derivatives": [
+        {
+          "kind": "wide",
+          "file": "assets/bg/pavilion-wide.webp",
+          "width": 1600,
+          "height": 900,
+          "bytes": 193536,
+          "quality": 86,
+          "budgetBytes": 204800,
+          "ok": true,
+          "crop": [
+            0.04,
+            0.515,
+            0.96,
+            0.7668
+          ],
+          "note": "裁去上部自题藏印，取疏林、空亭、水面；右侧留白"
+        },
+        {
+          "kind": "tall",
+          "file": "assets/bg/pavilion-tall.webp",
+          "width": 900,
+          "height": 1440,
+          "bytes": 172128,
+          "quality": 84,
+          "budgetBytes": 176128,
+          "ok": true,
+          "crop": [
+            0.15,
+            0.44,
+            0.7249,
+            0.8877
+          ],
+          "note": "竖裁疏林与空亭，亭在右下，上部留白"
+        },
+        {
+          "kind": "thumb",
+          "file": "assets/bg/pavilion-thumb.webp",
+          "width": 640,
+          "height": 420,
+          "bytes": 55284,
+          "quality": 87,
           "budgetBytes": 58368,
           "ok": true,
           "crop": [
