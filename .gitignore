@@ -1,0 +1,10 @@
+﻿node_modules/
+server/data/
+dist/
+_qa-artifacts/
+**/__pycache__/
+**/*.pyc
+**/_cache/
+*.log
+.DS_Store
+scripts/_probe-*.mjs

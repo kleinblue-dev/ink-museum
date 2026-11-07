@@ -1,0 +1,18 @@
+﻿{
+    "name":  "ink-museum",
+    "version":  "1.0.0",
+    "private":  true,
+    "type":  "module",
+    "description":  "墨馆 · 一座可以走进的水墨小馆（墨间 × 墨心 融合版）",
+    "scripts":  {
+                    "dev":  "node server/index.mjs",
+                    "test":  "node --test \"server/tests/*.test.mjs\" \"tests/unit/*.test.mjs\"",
+                    "validate":  "node scripts/validate-content.mjs",
+                    "build:standalone":  "node scripts/build-standalone.mjs",
+                    "qa":  "node tests/e2e/run.mjs",
+                    "assets":  "E:\\AI\\Python311\\python.exe scripts/assets/fetch_and_compose.py",
+                    "deploy":  "powershell -ExecutionPolicy Bypass -File scripts/deploy-pages.ps1",
+                    "serve":  "node scripts/serve-static.mjs",
+                    "check":  "node scripts/validate-content.mjs \u0026\u0026 node scripts/check-encoding.mjs"
+                }
+}

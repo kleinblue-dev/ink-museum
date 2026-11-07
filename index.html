@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#14110d">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="description" content="一馆山水，一卷自己。择一幅宋元水墨待一会儿，落一笔墨，收成一卷自己的画。">
+  <title>墨馆 · 一座可以走进的水墨小馆</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%2314110d'/%3E%3Crect x='12' y='12' width='40' height='40' rx='2' fill='%239e3b2e'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/steps.css">
+  <link rel="stylesheet" href="css/overlays.css">
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <div id="backdrop" class="backdrop" aria-hidden="true"></div>
+
+  <div id="chrome" class="chrome">
+    <nav id="chrome-nav" class="chrome-nav"></nav>
+  </div>
+
+  <main id="stage" class="stage" aria-label="展厅"></main>
+
+  <div id="layers" class="layers"></div>
+  <div id="toasts" class="toasts" aria-live="polite" aria-atomic="true"></div>
+  <div id="live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+</body>
+</html>

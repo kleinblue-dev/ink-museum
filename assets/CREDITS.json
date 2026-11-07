@@ -1,0 +1,99 @@
+{
+  "schemaVersion": "1.0.0",
+  "project": "ink-museum",
+  "note": "背景取自 Wikimedia Commons 公有领域（PD-old / PD-Art / CC0）宋元水墨名作；裁切、去题跋藏印、修补扫描/册页竖缝、暖纸白平衡、近单色、轻暗角由 scripts/assets/fetch_and_compose.py 完成。程序生成部分（宣纸底 / 纸纹 / 图标）不涉第三方版权。",
+  "assets": [
+    {
+      "id": "water",
+      "work": {
+        "title": "水图 · 秋水迥波",
+        "titleEn": "Water Album: The Waving Surface of the Autumn Flood",
+        "artist": "马远",
+        "dynasty": "南宋",
+        "year": "12–13 世纪",
+        "museum": "北京故宫博物院（册页）"
+      },
+      "sources": [
+        {
+          "fileTitle": "File:Ma Yuan - Water Album - The Waving Surface of the Autumn Flood.jpg",
+          "pageUrl": "https://commons.wikimedia.org/wiki/File:Ma_Yuan_-_Water_Album_-_The_Waving_Surface_of_the_Autumn_Flood.jpg",
+          "fileUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2b/Ma_Yuan_-_Water_Album_-_The_Waving_Surface_of_the_Autumn_Flood.jpg",
+          "width": 1708,
+          "height": 1115,
+          "mime": "image/jpeg",
+          "bytes": 1200194,
+          "license": "Public domain",
+          "licenseUrl": "",
+          "artistMeta": "Ma Yuan",
+          "dateMeta": "from 1160 until 1225date QS:P571,+1500-00-00T00:00:00Z/6,P580,+1160-00-00T00:00:00Z/9,P582,+1225-00-",
+          "credit": "http://140.112.185.185/fineart/painter-ch/mayuan/mayuan.htm",
+          "cache": "water_wave.jpg",
+          "downloadWidth": null
+        }
+      ],
+      "license": "PD-Art / PD-old（公有领域）",
+      "processing": [
+        "裁去色卡/边框/装裱/题跋/藏印区域（裁切框见 derivatives[].crop 归一化坐标）",
+        "竖向扫描/册页接缝以邻近纹理克隆修补（水图）",
+        "低通光照场校正（去扫描拼缝亮度台阶与老照片光照不均）",
+        "暖纸白平衡 + 近单色双色调（纸白 #f2e8d8 / 深墨 #1c1813）",
+        "亮度中值去噪（保留墨线边缘）；轻度锐化；暗角 ≤12%",
+        "出图前做轻柔化（只削极高频纸纹）以达标体积，观感保持墨线清晰",
+        "不添加任何文字/水印"
+      ],
+      "derivatives": [
+        {
+          "kind": "wide",
+          "file": "assets/bg/water-wide.webp",
+          "width": 1600,
+          "height": 900,
+          "bytes": 203576,
+          "quality": 71,
+          "budgetBytes": 204800,
+          "ok": true,
+          "crop": [
+            0.152225,
+            0.179372,
+            1.0,
+            0.910314
+          ],
+          "note": "裁去左侧题名与藏印，取水波主段；上方留白"
+        },
+        {
+          "kind": "tall",
+          "file": "assets/bg/water-tall.webp",
+          "width": 900,
+          "height": 1440,
+          "bytes": 173598,
+          "quality": 74,
+          "budgetBytes": 176128,
+          "ok": true,
+          "crop": [
+            0.204918,
+            0.0,
+            0.613021,
+            1.0
+          ],
+          "note": "竖裁中段水纹，手机端满屏"
+        },
+        {
+          "kind": "thumb",
+          "file": "assets/bg/water-thumb.webp",
+          "width": 640,
+          "height": 420,
+          "bytes": 57784,
+          "quality": 67,
+          "budgetBytes": 58368,
+          "ok": true,
+          "crop": [
+            0.0715625,
+            0.0,
+            0.9284375,
+            1.0
+          ],
+          "note": "由 wide 中裁 640:420 后缩到 640x420"
+        }
+      ]
+    }
+  ]
+}
