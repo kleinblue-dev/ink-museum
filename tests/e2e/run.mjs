@@ -194,7 +194,9 @@ async function main() {
 
   const startedAt = nowIso();
   const t0 = Date.now();
-  const outPath = args.out ? path.resolve(PROJECT_ROOT, args.out) : path.join(ARTIFACTS_ROOT, args.suite);
+  const outPath = args.out
+    ? path.resolve(PROJECT_ROOT, args.out)
+    : path.join(ARTIFACTS_ROOT, args.suite === 'full' ? 'final' : args.suite);
   let prepared;
   try {
     prepared = await prepareOutDir(outPath, { clean: !args.keep });

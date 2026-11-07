@@ -110,7 +110,10 @@ _qa-artifacts/early/
 
 前端未写完时允许 404/空壳：此时如实 FAIL（exit 1），`warnings`/`resources` 里记录缺失资源与请求失败，不伪造通过。
 
-## Full suite 计划（suite=full，待实现）
+## Full suite（suite=full，已实现，2026-11-07 已跑最终验收）
+
+> 状态：**已实现并执行过**（`node tests/e2e/run.mjs --suite=full`，产物默认 `_qa-artifacts/final/`，结果写入 `docs/QA_REPORT.md`）。
+> 本机最终验收结果：156 checks / 155 PASS / 1 偶发（满负载下 `npm test` 单用例进程超时，单独复跑 93/93）。
 
 Lead 派发最终验收任务后实现；harness 已具备能力，`run.mjs` 增加 `--suite=full`。预期跑法（实现时定稿）：
 

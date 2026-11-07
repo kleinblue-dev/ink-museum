@@ -1,116 +1,95 @@
-# 墨馆 ink-museum · QA 验收报告
+# 墨馆 ink-museum · QA 验收报告（最终）
 
 > 独立验收人：qa-verifier（不引用开发者自测结论，全部证据为本机复跑）
-> SPEC 版本：1.0.0 · SPEC §8 九条验收门
-> 状态：**静态门已验收（PASS）；E2E 待 v1.1「墨块托盘」交付后补跑**（2026-11-07 19:18 快照）
-> 最终结论：见文末「总结论」，E2E 完成后更新。
+> 版本：v1.1（含「墨块托盘」）· SPEC 1.0.0 §8 九条验收门
+> 验收时间：2026-11-07 19:22–19:28（full suite 142s）· 快照见 `_qa-artifacts/final/result.json` `projectSnapshot`
+> **结论：可交付。** SPEC §8 九门全部通过；full suite 156 项断言 **155 PASS / 1 FAIL**，唯一 FAIL 为 `npm test` 在满负载并行下 1 项服务进程测试偶发失败，单独复跑 **93/93 PASS**，判定测试环境竞态、非产品缺陷（详见 §5）。
 
 ---
 
-## 0. 结论摘要（截至静态验收）
+## 0. 结论摘要
 
 | 项目 | 结果 | 证据 |
 |---|---|---|
-| `npm test`（后端 + 前台/引擎单测） | **PASS**：93 tests / 93 pass / 0 fail | `_qa-artifacts/final-static/npm-test.log` |
-| `node scripts/validate-content.mjs` | **PASS**：0 error / 0 warn | `_qa-artifacts/final-static/validate-content.log` |
-| `node scripts/check-encoding.mjs` | **PASS**（1 WARN：`scripts/_probe-live.mjs` 带 BOM，非运行时产品文件） | `_qa-artifacts/final-static/check-encoding.log` |
-| `node scripts/build-standalone.mjs` | **PASS**：`dist/standalone.html` 3,283,200 B（3.13MB），模块 10 / 内联资源 14 / 掩膜 11 | `_qa-artifacts/final-static/build-standalone.log` |
-| 资产预算（首屏 / 图片 / 全站） | **PASS**：首屏 407.1KB（≤600KB）、图片 2.33MB（≤6MB）、全站 2.85MB / 39 文件（≤6MB） | `_qa-artifacts/final-static/static-check.json` |
-| 文档齐全 | **PASS**（README / SPEC / API / REA_MUSEUM / CREDITS 均在；QA_REPORT 即本文件） | 同上 JSON `docs` 字段 |
-| E2E（§8 门 3/4/6/7 + standalone 运行） | **待跑**：等 v1.1 交付，full suite 代码已就绪 | — |
+| SPEC §8 九条验收门 | **全部 PASS**（详见 §1） | 本报告 + `_qa-artifacts/final/result.json` |
+| E2E 全流程（server 1440/390/320 + local 1440） | **PASS**：4 条完整旅程 + v1.1 托盘 QC | `result.json` checks；截图 38 张 |
+| console error / pageerror / 外链 / HTTP≥400 | **0 / 0 / 0 / 0** | `result.json` `metrics.consoleErrors` 等 |
+| 资产预算 | 首屏 **407.4KB**（≤600KB）/ 图片 **2.35MB**（≤6MB）/ 全站 **2.85MB**（≤6MB） | `result.json.metrics` |
+| a11y | 按钮 0 无名 / 滑杆 aria 齐全 / 纯键盘走完 / reduced-motion 0s | `result.json` `a11y.*` |
+| standalone file:// | **PASS**：3,283,404B，0 console error、0 外链、能落墨+托盘+收卷 | `_qa-artifacts/final/standalone-*.png` |
+| 单测门（§8 #1） | 静态复跑 **93/93 PASS**；full 跑内 92/93（1 偶发） | `units-npm-test.log` / `units-npm-test-rerun.log` |
 
-静态验收快照：2026-11-07 19:18（v1.1 增量写入中，`js/journey.js`/`css/steps.css` 正在变更；最终以 E2E 运行时的 `result.json.projectSnapshot` 哈希为准）。
+**PASS/FAIL 计数：full suite 156 checks → 155 PASS / 1 偶发 FAIL；静态门单独复跑全部 PASS。**
+**是否可交付：可以交付。** 唯一 FAIL 不指向产品代码，建议发版前 `npm test` 单独复跑确认（见 §5）。
 
 ---
 
-## 1. SPEC §8 九条验收门状态
+## 1. SPEC §8 九条验收门
 
-| # | 验收门 | 状态 | 证据 / 说明 |
+| # | 验收门 | 结论 | 证据 |
 |---|---|---|---|
-| 1 | `npm test` 全绿 | ✅ PASS | 93/93 pass，0 fail（`final-static/npm-test.log`） |
-| 2 | `validate-content.mjs` 0 错误 | ✅ PASS | 0 error / 0 warn（`final-static/validate-content.log`） |
-| 3 | 浏览器 E2E（三视口全流程/落墨撤销/保存/馆藏/about/刷新恢复） | ⏳ 待跑 | `node tests/e2e/run.mjs --suite=full`；v1.1 交付后执行 |
-| 4 | 运行时零外链 | ⏳ 待跑 | 首屏静态测量已确认 external=0，全流程待 E2E |
-| 5 | 资产预算首屏 ≤600KB / 全站 ≤6MB | ✅ PASS | 首屏 407.1KB；全站 2.85MB；图片 2.33MB（`final-static/static-check.json`） |
-| 6 | 可访问性（按钮名称/键盘/reduced-motion） | ⏳ 待跑 | full suite `a11y.*` |
-| 7 | 移动端 320/375/430 无横向滚动 + 画布 touch 不滚动 | ⏳ 待跑 | full suite `mobile.*` |
-| 8 | `dist/standalone.html` 生成、双击可用、控制台 0 错 | 构建 ✅ / 运行 ⏳ | 构建 3.13MB；file:// 运行验证待 E2E |
-| 9 | 文档齐全 | ✅ PASS | 6 份文档均存在非空（本文件即 QA_REPORT） |
+| 1 | `npm test` 全绿 | ✅（单独复跑 93/93） | `_qa-artifacts/final/units-npm-test-rerun.log`（pass 93/fail 0）；full 跑内偶发见 §5 |
+| 2 | `validate-content.mjs` 0 错误 | ✅ PASS 0 error / 0 warn | `units-validate-content.log` |
+| 3 | 浏览器 E2E：三视口全流程/落墨撤销/本机保存/服务端保存→馆藏墙/about/刷新恢复 | ✅ PASS | `final/result.json`；4 条旅程截图（见 §2） |
+| 4 | 运行时网络零外站 | ✅ 全轮 0 外链 | `result.json` check `network.zeroExternalRequests`；`network.noHttpErrors` 0 |
+| 5 | 资产预算 首屏≤600KB / 全站≤6MB | ✅ 407.4KB / 2.85MB | `result.json.metrics.{firstScreen,assets}` |
+| 6 | 可访问性：按钮名/键盘/reduced-motion | ✅ PASS | `a11y.buttonNames`(unnamed=0)、`a11y.sliderAria`(ranges=7)、`a11y.keyboardFlow`、`a11y.reducedMotion`(0s/154ms) |
+| 7 | 移动端 320/375/430 无横向滚动、画布 touch 不滚屏 | ✅ PASS | `mobile.noHScroll.{320,375,430,1440}` 全 PASS；`e2e.mobile.touchNoPageScroll.*` |
+| 8 | standalone 构建 + file:// 双击可用 0 错 | ✅ PASS | 3,283,404B（10 模块/14 内联/11 掩膜）；`standalone.*` 全 PASS |
+| 9 | 文档齐全 | ✅ PASS | README 6,697B / SPEC 15,684B / API 22,703B / REA 7,202B / CREDITS 8,510B / 本报告 |
 
 ---
 
-## 2. 静态验收明细
+## 2. E2E 覆盖与结果明细
 
-### 2.1 单测（§8 门 1）
+运行方式：`node tests/e2e/run.mjs --suite=full`（自 spawn 干净服务：8793 `server/index.mjs` + 临时 DATA_DIR + `SAVE_LIMIT_MAX=200/READ_LIMIT_MAX=100000`；8794 `scripts/serve-static.mjs`；跑完按 PID 关闭、临时 DATA_DIR 已清理）
 
-```
-ℹ tests 93
-ℹ pass 93
-ℹ fail 0
-```
+### 2.1 四条完整旅程（全部 PASS）
 
-复现：`cd ink-museum; npm test`（`package.json` scripts.test = `node --test "server/tests/*.test.mjs" "tests/unit/*.test.mjs"`）
-
-### 2.2 内容校验（§8 门 2）
-
-`node scripts/validate-content.mjs` → `PASS 0 error / 0 warn`，各类资产尺寸/KB 列表见日志。
-
-### 2.3 编码检查（Lead 追加项）
-
-`node scripts/check-encoding.mjs` → 扫描 59 个文本文件，PASS；1 条 WARN：
-- `scripts/_probe-live.mjs` 带 UTF-8 BOM（Lead 的 live 探针脚本，非产品运行时文件，不影响运行时；建议后续修掉）。
-
-### 2.4 资产预算（§8 门 5）
-
-| 指标 | 实际值 | 阈值 | 结论 |
+| 旅程 | 视口 | 覆盖 | 断言 |
 |---|---|---|---|
-| 首屏 entry 传输（到 load 为止，本地静态） | **416,846 B ≈ 407.1KB** | ≤600KB | ✅ |
-| 首屏资源数 | 22 个（top：entry-wide 192.6KB / engine 54KB / journey 51.9KB / steps.css 22.4KB） | — | — |
-| 图片总量（`assets/bg` + icons + paper） | **2,440,327 B ≈ 2.33MB** | ≤6MB | ✅ |
-| 全站运行时资源（assets+js+css+content+data+index+manifest+robots） | **2,992,150 B ≈ 2.85MB / 39 文件** | ≤6MB | ✅ |
-| standalone 单文件 | 3,283,200 B ≈ 3.13MB | 报告项 | — |
+| server-desktop | 1440×900 | 7 步 + 托盘 + 落笔/落块/撤销/重来/收笔 + 收卷导出 + server 保存→馆藏墙 + about + 刷新恢复 + reveal 锁定 + ?fresh=1 | 约 45 项全 PASS |
+| server-mobile390 | 390×844 | 7 步 + 托盘 + touch 不滚屏 + 320/375/430 横向溢出采样 | 约 30 项全 PASS |
+| server-narrow320 | 320×640 | 7 步 + 托盘 + touch + 320 采样 | 约 28 项全 PASS |
+| local-desktop | 1440×900 | 7 步 + 托盘 + 本机保存→本机馆藏（「本机」标签）+ about + 刷新恢复 + ?fresh=1 保留本机馆藏 | 约 35 项全 PASS |
 
-首屏测量时 console error=0、外站请求=0、requestfailed=0（`static-check.json.firstScreenDiagnostics`）。
+### 2.2 v1.1「墨块托盘」专项 QC（Lead 指定项，全 PASS）
 
-### 2.5 standalone 构建（§8 门 8 的构建部分）
+| 检查 | 结果 |
+|---|---|
+| 打开托盘（墨块按钮 `aria-expanded`） | PASS（4 环境） |
+| 11 个芥子园墨块按钮 | PASS（`stampButtons=11` ×4） |
+| 11 块缩略图 `data-ready` 全部生成 | PASS（`readyThumbs=11` ×4） |
+| 选块（`aria-pressed` 切换） | PASS |
+| 旋转滑杆生效 | PASS（0 → 10） |
+| 点按画布落块 | PASS（画布 dataURL 变化） |
+| 落块后托盘自动收起 | PASS（`trayHidden=true`） |
+| Esc 关托盘 | PASS |
+| 托盘展开时 320/375/430 无横向溢出 | PASS（`mobile.noHScroll.*` 采样） |
+| standalone 内托盘可用 | PASS（11 块 + 11 缩略图） |
 
-`node scripts/build-standalone.mjs` → `standalone.html 生成：dist\standalone.html 3206KB 模块 10 个 / 内联资源 14 处 / 掩膜 11 块`，exit 0。
-file:// 双击运行验证（Chrome headless、0 console error、能走 enter→reveal、无未内联引用）待 E2E。
+### 2.3 保存与馆藏
 
-### 2.6 文档（§8 门 9）
-
-| 文档 | 大小 | 存在 |
-|---|---|---|
-| README.md | 6,500 B | ✅ |
-| docs/SPEC.md | 15,684 B | ✅ |
-| docs/API.md | 22,703 B | ✅ |
-| docs/REA_MUSEUM.md | 7,202 B | ✅ |
-| CREDITS.md | 8,510 B | ✅ |
-| docs/QA_REPORT.md | 本文件 | ✅ |
+- server 保存：`POST /api/scrolls` **201**；提示「已存进馆藏」；`GET /api/scrolls` items=1；画卷图 URL **200 + image/webp**；馆藏墙卡片 1 张且图片加载成功。
+- local 保存：提示「已存本机馆藏」；`localStorage['ink-museum.gallery.v1']` count=1；馆藏墙卡片 1 张 +「本机」标签。
+- 刷新恢复：ink 之后刷新 → 回到 scene + toast「墨已干，重走一厅吧」、墨迹统计清零；pre 刷新 → step=pre。
+- reveal 锁定：无返回按钮、step=reveal。
+- `?fresh=1`：会话清空回 enter；local 模式保留本机馆藏（before=1 after=1）。
 
 ---
 
-## 3. E2E 验收（待 v1.1 后填写）
+## 3. 关键数字（本机复跑）
 
-计划与门映射见 `tests/e2e/README.md`「Full suite 计划」。本次将执行：
-
-```powershell
-cd ink-museum
-node tests/e2e/run.mjs --suite=full
-```
-
-- server 模式：8793 端口自 spawn `server/index.mjs`（临时 DATA_DIR + `SAVE_LIMIT_MAX=200`/`READ_LIMIT_MAX=100000`），跑完按 PID 关。
-- local 模式：8794 端口自 spawn `scripts/serve-static.mjs`，验证本机保存/馆藏。
-- standalone：`dist/standalone.html` 用 `file://` 打开验证。
-- 产物：`_qa-artifacts/final/`（截图 + result.json + 服务日志）。
-
-### 3.1 待填：E2E 结果总表
-
-<!-- E2E-RESULTS -->
-
-### 3.2 待填：失败项与阻塞项
-
-<!-- E2E-FAILURES -->
+| 指标 | 数值 | 阈值 | 结论 |
+|---|---|---|---|
+| 首屏 entry 传输（到 load，16 个同源资源） | 417,176 B（407.4KB） | ≤600KB | ✅ |
+| 图片总量（22 张 assets） | 2,467,895 B（2.35MB） | ≤6MB | ✅ |
+| 全站运行时资源 | 2,992,354 B（2.85MB）/ 39 文件 | ≤6MB | ✅ |
+| standalone | 3,283,404 B（3.13MB） | 报告项 | ✅ |
+| 墨块托盘 | 11 块 / 11 缩略图 | 11 | ✅ |
+| 普通切步动效 | max transition 1.2s（SPEC 0.9–1.4s） | ✅ |
+| reduced-motion 切步 | transition 0s / 154ms | ✅ |
+| 运行环境 | Win11 · Node v24.14.0 · Chrome 156.0.8078.80 · playwright-core 1.65.0（系统 Chrome，未下载浏览器） | — | — |
 
 ---
 
@@ -118,35 +97,44 @@ node tests/e2e/run.mjs --suite=full
 
 | 类别 | 路径 |
 |---|---|
-| 单测日志 | `_qa-artifacts/final-static/npm-test.log` |
-| 内容校验日志 | `_qa-artifacts/final-static/validate-content.log` |
-| 编码检查日志 | `_qa-artifacts/final-static/check-encoding.log` |
-| standalone 构建日志 | `_qa-artifacts/final-static/build-standalone.log` |
-| 静态验收 JSON（预算/文档/首屏明细） | `_qa-artifacts/final-static/static-check.json` |
-| E2E 结果（待生成） | `_qa-artifacts/final/result.json` + 截图 + `server-mode.log` / `local-static.log` |
+| 汇总机器可读结果 | `_qa-artifacts/final/result.json`（156 checks / 38 张截图路径 / metrics / projectSnapshot） |
+| E2E 截图 | `_qa-artifacts/final/{server-desktop,server-mobile390,server-narrow320,local-desktop}-*.png`、`a11y-keyboard-reveal.png`、`standalone-{enter,ink,reveal}.png` |
+| server / static 服务日志 | `_qa-artifacts/final/server-mode.log`、`local-static.log` |
+| 单测日志（full 跑内偶发） | `_qa-artifacts/final/units-npm-test.log` |
+| 单测日志（单独复跑 93/93） | `_qa-artifacts/final/units-npm-test-rerun.log` |
+| 内容校验 / 编码检查 / standalone 构建 | `units-validate-content.log`、`units-check-encoding.log`、`standalone-build.log` |
+| 静态验收（预算/文档首屏明细） | `_qa-artifacts/final-static/static-check.json` + 4 份日志 |
 
-## 5. 复现命令
+## 5. 失败项与建议
+
+**唯一 FAIL：`unit.npmTest`**（full run 内 `exit=1 pass=92 fail=1`）
+- 失败用例：`node server/index.mjs --no-static：mode=api，静态路径 404 JSON`（`units-npm-test.log` 第 24 行）。
+- 单独复跑 `npm test`：**93 pass / 0 fail / exit 0**（`units-npm-test-rerun.log`）。
+- 判定：full suite 运行期间同时有 2 个服务 + 1 个 Chrome（多上下文）抢占资源/端口，该用例内 spawn 的服务进程启动/退出超时导致偶发；**非产品缺陷，不阻断交付**。
+- 建议：发版前单独跑一次 `npm test` 确认（已 PASS）；后续可给该用例加重试或提高进程启动超时，避免 CI 满负载下误报。
+
+**观察项**：无。v1.1 已修复落墨统计（落笔后 `session.ink.strokes=1`）；check-encoding 本次扫描 60 文件 PASS（原 WARN 的 `_probe-live.mjs` 已由 Lead 删除）。
+
+## 6. 未测项（如实申报，不冒充）
+
+1. **线上 GitHub Pages v1.1 全流程**：本次未直接测线上（Lead 独立探针已验，仅作对照不作本报告证据）；本地 server/local/standalone 覆盖同一份代码。
+2. **真实移动设备 / 手写笔**：未测；触屏用 Chrome headless + CDP `Input.dispatchTouchEvent` 模拟。
+3. **SPEC §4 性能预算**（首帧可交互 <1.2s、落笔响应 <50ms、内存 <120MB）：未测（不属 §8 九门，本任务未纳入仪器化）。
+4. **浏览器兼容**：仅 Chrome 156；未测 Safari/Firefox/旧版 Chrome。
+5. 线上发布回执（Pages 推送/缓存刷新）属 Lead 职责，未测。
+
+## 7. 复现命令
 
 ```powershell
 cd ink-museum
-npm test
-node scripts/validate-content.mjs
-node scripts/check-encoding.mjs
-node scripts/build-standalone.mjs
-node tests/e2e/static-check.mjs        # 资产预算/文档/首屏（自起 8794 静态服务）
-node tests/e2e/run.mjs --suite=full    # E2E（v1.1 后）
+npm test                                   # 93/93（建议单独跑）
+node scripts/validate-content.mjs          # PASS 0/0
+node scripts/check-encoding.mjs            # PASS
+node scripts/build-standalone.mjs          # 3,283,404B
+node tests/e2e/run.mjs --suite=full        # 156 checks：完整 E2E（自起 8793/8794 服务，按 PID 关闭）
+node tests/e2e/static-check.mjs            # 首屏/全站资产预算与文档检查
 ```
 
-## 6. 观察项 / 备注（不影响当前结论）
+## 8. 最终结论
 
-1. `scripts/_probe-live.mjs` UTF-8 BOM：建议清理（不在运行时路径）。
-2. v1.1「墨块托盘」增量交付前，本报告静态数字基于 2026-11-07 19:18 快照；E2E 跑完后补最终哈希。
-3. 线上基线（Lead 独立探针：桌面全流程 console error 0 / 外链 0）仅作对照，不作为本报告证据。
-
----
-
-## 总结论
-
-**静态门（§8 #1/#2/#5/#9 + #8 构建）全部 PASS；E2E 门（#3/#4/#6/#7 + #8 运行）待 v1.1 交付后补跑并更新「总结论」。**
-
-当前已知 FAIL：无。当前阻塞：等待前端 v1.1「墨块托盘」增量交付（Lead 通知后再跑最终 E2E）。
+**验收通过，可以交付。** SPEC §8 九条门全部 PASS；E2E 156 项断言 155 PASS，唯一 FAIL 为满负载下 `npm test` 单用例偶发（单独复跑 93/93，非产品缺陷）。无阻塞项；建议发版前单独复跑 `npm test` 并保留本报告证据路径。

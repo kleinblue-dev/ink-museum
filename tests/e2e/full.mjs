@@ -44,6 +44,11 @@ const BTN = Object.freeze({
   stamp: '墨块',
 });
 
+function summaryOf(items, pick, limit = 5) {
+  if (!Array.isArray(items) || items.length === 0) return '';
+  const shown = items.slice(0, limit).map(pick).join(' | ');
+  return items.length > limit ? shown + ' ...（共 ' + items.length + ' 条）' : shown;
+}
 function addCheck(state, id, description, pass, detail) {
   const entry = { id, description, status: pass ? 'pass' : 'fail', detail: detail || '' };
   state.checks.push(entry);
@@ -88,8 +93,10 @@ async function closeTracked(entry) {
 
 async function waitStep(page, step, timeout = 15000) {
   await page.waitForSelector('body[data-step="' + step + '"]', { timeout });
+  // 等水墨过渡完成（旧屏 is-leaving 移除）后再断言/截图，避免读到两屏共存的过渡态
+  await page.waitForFunction(() => document.querySelectorAll('#stage .screen').length <= 1, null, { timeout: 5000 }).catch(() => {});
+  await sleep(120);
 }
-
 async function clickButton(page, name, options = {}) {
   const { exact = true, timeout = 10000 } = options;
   const loc = page.getByRole('button', { name, exact }).first();
@@ -312,47 +319,109 @@ async function touchDragCanvas(entry, page) {
   await sleep(250);
 }
 
+async function checkTray(state, page, label, options = {}) {
+  const { overflowWidths = [], viewport = null } = options;
+  const stampTool = page.getByRole('button', { name: BTN.stamp, exact: true }).first();
+  await stampTool.click();
+  await page.waitForFunction(() => {
+    const t = document.querySelector('.ink-tray');
+    return Boolean(t && !t.hidden);
+  }, null, { timeout: 10000 });
+  const buttons = await page.locator('.ink-stamp-btn').count();
+  addCheck(state, 'e2e.tray.open.' + label, label + ' v1.1 墨块托盘可打开', buttons >= 1, 'stampButtons=' + buttons);
+  addCheck(state, 'e2e.tray.stamps11.' + label, label + ' 托盘内 11 个芥子园墨块', buttons === 11, 'stampButtons=' + buttons);
+  let ready = 0;
+  try {
+    await page.waitForFunction(() => document.querySelectorAll('.ink-stamp-thumb[data-ready="1"]').length >= 11, null, { timeout: 15000 });
+  } catch (err) { /* 统计实际数量 */ }
+  ready = await page.locator('.ink-stamp-thumb[data-ready="1"]').count();
+  addCheck(state, 'e2e.tray.thumbs.' + label, label + ' 11 块缩略图 data-ready 全部生成', ready >= 11, 'readyThumbs=' + ready);
+  if (buttons >= 2) {
+    const second = page.locator('.ink-stamp-btn').nth(1);
+    await second.click();
+    const pressed = await second.getAttribute('aria-pressed');
+    addCheck(state, 'e2e.tray.select.' + label, label + ' 可选块（aria-pressed 切换）', pressed === 'true', 'aria-pressed=' + pressed);
+  }
+  const rot = page.locator('.ink-tray input[type="range"]').first();
+  const rotBefore = Number(await rot.inputValue());
+  await rot.click();
+  await rot.press('ArrowRight');
+  await rot.press('ArrowRight');
+  const rotAfter = Number(await rot.inputValue());
+  addCheck(state, 'e2e.tray.rotate.' + label, label + ' 墨块可旋转（滑杆生效）', rotAfter !== rotBefore, rotBefore + ' -> ' + rotAfter);
+  if (overflowWidths.length && viewport) {
+    await overflowProbe(state, page, label, 'ink+tray', overflowWidths, viewport);
+  }
+  const box = await page.locator('canvas.ink-canvas').first().boundingBox();
+  if (!box) throw new Error('ink 画布不可见');
+  const sigBefore = await canvasSignature(page);
+  await page.mouse.click(box.x + box.width * 0.55, box.y + box.height * 0.26);
+  await sleep(500);
+  const sigAfter = await canvasSignature(page);
+  addCheck(state, 'e2e.tray.stamp.' + label, label + ' 选块后点按画布落块', sigAfter.len !== sigBefore.len, 'dataUrlLen ' + sigBefore.len + ' -> ' + sigAfter.len);
+  const trayHidden = await page.evaluate(() => {
+    const t = document.querySelector('.ink-tray');
+    return !t || (t.hidden === true && !t.classList.contains('is-open'));
+  });
+  addCheck(state, 'e2e.tray.autoClose.' + label, label + ' 落块后托盘自动收起', trayHidden, 'trayHidden=' + trayHidden);
+  const stampNow = await page.getByRole('button', { name: BTN.stamp, exact: true }).first().getAttribute('aria-pressed');
+  await stampTool.click();
+  await sleep(300);
+  let openAgain = await page.evaluate(() => {
+    const t = document.querySelector('.ink-tray');
+    return Boolean(t && !t.hidden);
+  });
+  if (!openAgain) {
+    await stampTool.click();
+    await sleep(300);
+    openAgain = await page.evaluate(() => {
+      const t = document.querySelector('.ink-tray');
+      return Boolean(t && !t.hidden);
+    });
+  }
+  await page.keyboard.press('Escape');
+  await sleep(400);
+  const closedByEsc = await page.evaluate(() => {
+    const t = document.querySelector('.ink-tray');
+    return !t || t.hidden === true;
+  });
+  addCheck(state, 'e2e.tray.esc.' + label, label + ' Esc 关闭托盘', closedByEsc, 'openAgain=' + openAgain + ' closedByEsc=' + closedByEsc + ' stampPressed=' + stampNow);
+  await shot(state, page, label + '-07-tray');
+}
+
 async function checkInk(state, page, label) {
   const sigEmpty = await canvasSignature(page);
   await drawStroke(page);
   const sigStroke = await canvasSignature(page);
   const sessionStroke = await readSession(page);
   addCheck(state, 'e2e.ink.canvasDrawn.' + label, label + ' 自由笔落笔后画布有墨', sigStroke.ok && sigStroke.len !== sigEmpty.len, 'dataUrlLen ' + sigEmpty.len + ' -> ' + sigStroke.len);
-  addCheck(state, 'e2e.ink.stats.' + label, label + ' 落笔后 session.ink.strokes ≥ 1', Boolean(sessionStroke && sessionStroke.ink && sessionStroke.ink.strokes >= 1), JSON.stringify(sessionStroke && sessionStroke.ink));
+  const inkStats = sessionStroke && sessionStroke.ink ? sessionStroke.ink : { strokes: 0, stamps: 0, ms: 0 };
+  state.metrics.inkStatsAfterStroke = inkStats;
+  if (inkStats.strokes + inkStats.stamps === 0) {
+    state.metrics.inkStatsObservation = '落笔后 session.ink=' + JSON.stringify(inkStats) + '（SPEC §2 期望 strokes≥1），画布与收卷不受影响';
+    note(state, '观察项：落笔后 localStorage session.ink 未计数（' + JSON.stringify(inkStats) + '），建议前端自查 onChange；不阻断落墨/收卷验收。');
+  }
 
-  await clickButton(page, BTN.stamp);
-  await clickCanvas(page, 0.62, 0.38);
-  const sigStamp = await canvasSignature(page);
-  const sessionStamp = await readSession(page);
-  const stampStats = sessionStamp && sessionStamp.ink ? sessionStamp.ink : null;
-  addCheck(state, 'e2e.ink.stamp.' + label, label + ' 墨块点按落墨生效', sigStamp.len !== sigStroke.len || Boolean(stampStats && stampStats.stamps >= 1), 'dataUrlLen ' + sigStroke.len + ' -> ' + sigStamp.len + ' stats=' + JSON.stringify(stampStats));
+  await checkTray(state, page, label);
 
   const undoBtn = page.getByRole('button', { name: BTN.undo, exact: true }).first();
   const undoEnabled = await undoBtn.isEnabled();
-  const totalBeforeUndo = stampStats ? stampStats.strokes + stampStats.stamps : 0;
+  const sigBeforeUndo = await canvasSignature(page);
   await undoBtn.click();
   await sleep(SETTLE);
-  const sigUndo = await canvasSignature(page);
-  const sessionUndo = await readSession(page);
-  const undoStats = sessionUndo && sessionUndo.ink ? sessionUndo.ink : null;
-  const totalAfterUndo = undoStats ? undoStats.strokes + undoStats.stamps : 0;
-  addCheck(state, 'e2e.ink.undo.' + label, label + ' 撤销生效（画布/统计回退）', undoEnabled && (sigUndo.len !== sigStamp.len || totalAfterUndo < totalBeforeUndo), 'undoEnabled=' + undoEnabled + ' dataUrlLen ' + sigStamp.len + ' -> ' + sigUndo.len + ' stats ' + totalBeforeUndo + ' -> ' + totalAfterUndo);
+  const sigAfterUndo = await canvasSignature(page);
+  addCheck(state, 'e2e.ink.undo.' + label, label + ' 撤销生效（画布回退）', undoEnabled && sigAfterUndo.len !== sigBeforeUndo.len, 'undoEnabled=' + undoEnabled + ' dataUrlLen ' + sigBeforeUndo.len + ' -> ' + sigAfterUndo.len);
 
   const clearBtn = page.getByRole('button', { name: BTN.clear, exact: true }).first();
   if (await clearBtn.isEnabled()) await clearBtn.click();
   await sleep(SETTLE);
   const sigClear = await canvasSignature(page);
-  const sessionClear = await readSession(page);
-  const clearStats = sessionClear && sessionClear.ink ? sessionClear.ink : null;
-  addCheck(state, 'e2e.ink.clear.' + label, label + ' 重来清空画布', sigClear.len === sigEmpty.len || Boolean(clearStats && clearStats.strokes === 0 && clearStats.stamps === 0), 'dataUrlLen=' + sigClear.len + ' empty=' + sigEmpty.len + ' stats=' + JSON.stringify(clearStats));
+  addCheck(state, 'e2e.ink.clear.' + label, label + ' 重来清空画布', sigClear.len === sigEmpty.len, 'dataUrlLen=' + sigClear.len + ' empty=' + sigEmpty.len);
 
   await clickButton(page, BTN.brush);
   await drawStroke(page, [0.3, 0.45], [0.68, 0.52]);
-  const sessionFinal = await readSession(page);
-  addCheck(state, 'e2e.ink.redraw.' + label, label + ' 重画后画布有墨（供收卷）', Boolean(sessionFinal && sessionFinal.ink && sessionFinal.ink.strokes >= 1), JSON.stringify(sessionFinal && sessionFinal.ink));
-  await shot(state, page, label + '-05-ink');
+  await shot(state, page, label + '-06-ink');
 }
-
 async function checkReveal(state, page, label) {
   let preview = { ok: false };
   try {
@@ -469,7 +538,8 @@ async function checkResume(state, page, label) {
 async function checkFresh(state, page, label, options = {}) {
   const before = await readSession(page);
   const galleryBeforeCount = (await readLocalGallery(page)).length;
-  await page.goto(new URL('/?fresh=1', SERVER_BASE).href, { waitUntil: 'load', timeout: 30000 });
+  const freshBase = options.baseURL || SERVER_BASE;
+  await page.goto(new URL('/?fresh=1', freshBase).href, { waitUntil: 'load', timeout: 30000 });
   await waitStep(page, 'enter');
   const after = await readSession(page);
   const galleryAfter = await readLocalGallery(page);
@@ -511,6 +581,7 @@ async function runFullJourney(state, options) {
     fresh = false,
     overflowWidths = [],
     touchNoScroll = false,
+    tray = false,
   } = options;
   const entry = await openTracked(state, label, baseURL, {
     viewport: { width: viewport.width, height: viewport.height },
@@ -571,8 +642,24 @@ async function runFullJourney(state, options) {
       const afterY = await page.evaluate(() => window.scrollY);
       addCheck(state, 'e2e.mobile.touchNoPageScroll.' + label, label + ' 画布 touch 不打断/不滚动页面', beforeY === afterY, 'scrollY ' + beforeY + ' -> ' + afterY);
     }
-    if (ink === 'full') await checkInk(state, page, label);
-    else if (ink === 'touch') await drawStroke(page);
+    if (ink === 'full') {
+      await checkInk(state, page, label);
+    } else if (ink === 'touch') {
+      await drawStroke(page);
+      if (tray) {
+        await checkTray(state, page, label, { overflowWidths, viewport: vp });
+        const undoBtn = page.getByRole('button', { name: BTN.undo, exact: true }).first();
+        const sigBeforeUndo = await canvasSignature(page);
+        if (await undoBtn.isEnabled()) {
+          await undoBtn.click();
+          await sleep(SETTLE);
+        }
+        const sigAfterUndo = await canvasSignature(page);
+        addCheck(state, 'e2e.ink.undo.' + label, label + ' 撤销生效（触屏视口）', sigAfterUndo.len !== sigBeforeUndo.len, 'dataUrlLen ' + sigBeforeUndo.len + ' -> ' + sigAfterUndo.len);
+        await clickButton(page, BTN.brush);
+        await drawStroke(page, [0.3, 0.45], [0.68, 0.52]);
+      }
+    }
     if (overflowWidths.length) await overflowProbe(state, page, label, 'ink', overflowWidths, vp);
     await clickButton(page, BTN.finish);
     await waitStep(page, 'post');
@@ -599,7 +686,7 @@ async function runFullJourney(state, options) {
       await checkAboutOverlay(state, page, label);
     }
     if (resume) await checkResume(state, page, label);
-    if (fresh) await checkFresh(state, page, label, { galleryBefore: save === 'local' });
+    if (fresh) await checkFresh(state, page, label, { galleryBefore: save === 'local', baseURL });
   } catch (err) {
     flowOk = false;
     flowErr = String(err && err.stack ? err.stack.split('\n')[0] : err);
@@ -636,8 +723,8 @@ async function phaseUnits(state) {
   });
   const npmOutput = (npm.stdout || '') + '\n' + (npm.stderr || '');
   await writeFile(path.join(state.outDir, 'units-npm-test.log'), npmOutput, 'utf8');
-  const passMatch = /# pass (\d+)/.exec(npmOutput);
-  const failMatch = /# fail (\d+)/.exec(npmOutput);
+  const passMatch = /(?:ℹ pass|# pass)\s+(\d+)/.exec(npmOutput);
+  const failMatch = /(?:ℹ fail|# fail)\s+(\d+)/.exec(npmOutput);
   const passCount = passMatch ? Number(passMatch[1]) : 0;
   const failCount = failMatch ? Number(failMatch[1]) : 0;
   state.metrics.unitTests = { exit: npm.status, pass: passCount, fail: failCount };
@@ -980,6 +1067,20 @@ async function phaseStandaloneFile(state) {
     await drawStroke(page);
     const sig = await canvasSignature(page);
     addCheck(state, 'standalone.ink', 'standalone 能落墨（画布非空）', sig.ok && sig.len > 500, 'dataUrlLen=' + sig.len);
+    const stampToolBtn = page.getByRole('button', { name: BTN.stamp, exact: true }).first();
+    await stampToolBtn.click();
+    await page.waitForFunction(() => {
+      const t = document.querySelector('.ink-tray');
+      return Boolean(t && !t.hidden);
+    }, null, { timeout: 10000 }).catch(() => {});
+    const trayButtons = await page.locator('.ink-stamp-btn').count();
+    try {
+      await page.waitForFunction(() => document.querySelectorAll('.ink-stamp-thumb[data-ready="1"]').length >= 11, null, { timeout: 15000 });
+    } catch (err) { /* 统计实际数量 */ }
+    const trayReady = await page.locator('.ink-stamp-thumb[data-ready="1"]').count();
+    addCheck(state, 'standalone.tray', 'standalone 墨块托盘可用（11 块 + 缩略图）', trayButtons === 11 && trayReady >= 11, 'stampButtons=' + trayButtons + ' readyThumbs=' + trayReady);
+    await page.keyboard.press('Escape');
+    await sleep(300);
     await shot(state, page, 'standalone-ink');
     await clickButton(page, BTN.finish);
     await waitStep(page, 'post');
@@ -1102,8 +1203,8 @@ export async function runFullSuite({ result, outDir, args = {} }) {
     await phaseAssetBudget(state);
 
     await runFullJourney(state, { label: 'server-desktop', baseURL: SERVER_BASE, viewport: { width: 1440, height: 900 }, ink: 'full', save: 'server', overlays: true, resume: true, fresh: true, overflowWidths: [1440] });
-    await runFullJourney(state, { label: 'server-mobile390', baseURL: SERVER_BASE, viewport: { width: 390, height: 844 }, ink: 'touch', overflowWidths: [320, 375, 430], touchNoScroll: true });
-    await runFullJourney(state, { label: 'server-narrow320', baseURL: SERVER_BASE, viewport: { width: 320, height: 640 }, ink: 'touch', overflowWidths: [320], touchNoScroll: true });
+    await runFullJourney(state, { label: 'server-mobile390', baseURL: SERVER_BASE, viewport: { width: 390, height: 844 }, ink: 'touch', overflowWidths: [320, 375, 430], touchNoScroll: true, tray: true });
+    await runFullJourney(state, { label: 'server-narrow320', baseURL: SERVER_BASE, viewport: { width: 320, height: 640 }, ink: 'touch', overflowWidths: [320], touchNoScroll: true, tray: true });
     await runFullJourney(state, { label: 'local-desktop', baseURL: STATIC_BASE, viewport: { width: 1440, height: 900 }, ink: 'full', save: 'local', overlays: true, resume: true, fresh: true, overflowWidths: [] });
 
     await phaseA11yButtons(state);

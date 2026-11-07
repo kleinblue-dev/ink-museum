@@ -8,6 +8,21 @@
 
 > 这是一段自我陪伴的练习，**不是医疗建议**，不替代任何专业支持。页面不打分、不评级、不诊断。
 
+## 看一眼
+
+| 入馆 | 择境 |
+|---|---|
+| ![入馆](docs/screenshots/01-enter.webp) | ![择境](docs/screenshots/02-scene.webp) |
+
+| 落墨 · 芥子园墨块托盘 | 收卷 |
+|---|---|
+| ![托盘](docs/screenshots/03-ink-tray.webp) | ![收卷](docs/screenshots/04-reveal.webp) |
+
+| 馆藏墙 | 手机 |
+|---|---|
+| ![馆藏](docs/screenshots/05-gallery.webp) | ![手机](docs/screenshots/06-mobile.webp) |
+
+
 ---
 
 ## 3 分钟开始
@@ -39,6 +54,7 @@ node scripts/build-standalone.mjs
 | 换背景画作 | `assets/bg/` + `scripts/assets/fetch_and_compose.py` | 脚本从 Wikimedia Commons 取公有领域画作，统一调色后输出 wide/tall/thumb |
 | 视觉/字号/留白/动效 | `css/` | 设计 token 在 `css/tokens.css`；不要引入外部字体与 CDN |
 | 落墨手感/墨块 | `js/ink/` + `data/masks.json` | 掩膜数据由墨心提取，改引擎见 `docs/SPEC.md` §4 |
+| 墨块托盘（11 块芥子园） | `content/content.js` 的 `stamps[]` + `js/journey.js` | 增删块：改 content + `data/masks.json`（掩膜 id 对应）；托盘在 js/ink 屏自动渲染 |
 | 前后自评题目 | `content/content.js` 的 `pre/post` | 默认三项：紧/累/乱；改 key 需同步 `server` 校验范围 |
 | 后端存储/限流/接口 | `server/` + `docs/API.md` | 零依赖 Node；数据在 `server/data/`（已 gitignore） |
 | 单文件离线版 | `node scripts/build-standalone.mjs` | 构建约定见脚本头部注释 |
